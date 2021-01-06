@@ -140,7 +140,7 @@ while True:
             avewind_str = "{0:.2f}".format(raw_data['avewindspeed'] * 0.2237)
             gustwind_str = "{0:.2f}".format(raw_data['gustwindspeed'] * 0.2237)
             cumrain_str = "{0:.2f}".format(raw_data['cumulativerain'] * 0.003937)
-            uv_str = "{0:.0f}".format(raw_data['uv'] * 0.1)
+            uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
             light_str = "{0:.0f}".format(raw_data['light'])
             # Form URL into WU format and Send
             r= requests.get(
