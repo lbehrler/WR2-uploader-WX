@@ -9,7 +9,7 @@ from threading  import Thread
 import json
 import datetime
 import time
-
+from wuconfig import Config
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------# -------------------------------------------------------------------------------------------------------------------------------------------------------------$$-----------$
 # Test Data
@@ -25,7 +25,22 @@ rainfall = 1.270
 winddirection = 1
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------$
-# URL Formation
+# URL Formation and WU initialization 
+   
+# ============================================================================
+#  Read Weather Underground Configuration
+# ============================================================================
+    logging.info('Initializing Weather Underground configuration')
+    wu_station_id = Config.STATION_ID
+    wu_station_key = Config.STATION_KEY
+    if (wu_station_id is None) or (wu_station_key is None):
+        logging.info('Missing values from the Weather Underground configuration file')
+        sys.exit(1)
+
+    # we made it this far, so it must have worked...
+    logging.info('Successfully read Weather Underground configuration')
+    logging.info('Station ID: {}'.format(wu_station_id))
+    logging.debug('Station key: {}'.format(wu_station_key))
 # create a string to hold the first part of the URL
 #WUurl = "https://weatherstation.wunderground.com/weatherstation\
 #/updateweatherstation.php?"
