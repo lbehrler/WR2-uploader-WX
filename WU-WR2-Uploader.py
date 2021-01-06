@@ -1,5 +1,6 @@
 # Weather Underground Upload Script for WeatherSense SwitchDoc Labs Weather Sensors
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Adapted from Switch Doc Labs readWeatherSensors.py script for testing the WeatherRack2
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------
 import sys
 import requests
@@ -95,12 +96,39 @@ while True:
         if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)):
             sys.stdout.write('WeatherSense Indoor T/H F016TH Found' + '\n')
             sys.stdout.write('This is the raw data: ' + sLine + '\n')
+            
+            # Variable Processing from JSON output from Indoor T/H unit for WU upload
+            sys.stdout.write('Variable processing of Indoor T/H raw data. \n')
+            raw_data = json.loads(sLine)
+            indhumidity_str = "{0:.0f}".format(raw_data['humidity'])
+            indtemp_str =  "{0:.1f}".format(raw_data['temperature_F'])
+
+            # Form URL into WU format and Send
+            r= requests.get(
+                WUurl +
+                WUcreds +
+                date_str +
+                "&indoortempf=" + indtemp_str +
+                "&indoorhumidity=" + indhumidity_str +
+                "&softwaretype=" + "RaspberryPi" +
+                action_str)
+            # Show a copy of what you formed up and are uploading in HRF 
+            print (WUurl +
+                WUcreds +
+                date_str +
+                "&indoortempf=" + indtemp_str +
+                "&indoorhumidity=" + indhumidity_str +
+                "&softwaretype=" + "RaspberryPi" +
+                action_str)
+            # Check WU Feed Status
+            print("Received " + str(r.status_code) + " " + str(r.text))
+            
         if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
             sys.stdout.write('WeatherSense WeatherRack2 FT020T found' + '\n')
             sys.stdout.write('This is the raw data: ' + sLine + '\n')
 
-            # Variable Processing from JSON output for WU upload
-            sys.stdout.write('Formatting variables. \n')
+            # Variable Processing from JSON output from WR2 unit for WU upload
+            sys.stdout.write('Variable processing of WR2 raw data. \n')
             raw_data = json.loads(sLine)
             humidity_str = "{0:.0f}".format(raw_data['humidity'])
             tempf = ((raw_data['temperature']-400)/10.0)
@@ -129,7 +157,7 @@ while True:
                 "&uv=" + uv_str +
                 "&softwaretype=" + "RaspberryPi" +
                 action_str)
-            # Show a copy of what you formed up and are uploading in HRF
+            # Show a copy of what you formed up and are uploading in HRF 
             print (WUurl +
                 WUcreds +
                 date_str +
