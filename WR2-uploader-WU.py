@@ -9,7 +9,7 @@ from threading  import Thread
 import json
 import datetime
 import time
-
+from wuconfig import Config
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------# -------------------------------------------------------------------------------------------------------------------------------------------------------------$$-----------$
 # Test Data
@@ -25,15 +25,30 @@ rainfall = 1.270
 winddirection = 1
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------$
-# URL Formation
+# URL Formation and WU initialization 
+   
+# ============================================================================
+#  Read Weather Underground Configuration
+# ============================================================================
+    logging.info('Initializing Weather Underground configuration')
+    wu_station_id = Config.STATION_ID
+    wu_station_key = Config.STATION_KEY
+    if (wu_station_id is None) or (wu_station_key is None):
+        logging.info('Missing values from the Weather Underground configuration file')
+        sys.exit(1)
+
+    # we made it this far, so it must have worked...
+    logging.info('Successfully read Weather Underground configuration')
+    logging.info('Station ID: {}'.format(wu_station_id))
+    logging.debug('Station key: {}'.format(wu_station_key))
 # create a string to hold the first part of the URL
 #WUurl = "https://weatherstation.wunderground.com/weatherstation\
 #/updateweatherstation.php?"
 WUurl = "https://rtupdate.wunderground.com/weatherstation\
 /updateweatherstation.php?"
-WU_station_id = "KTXMANSF125" # Replace XXXX with your PWS ID
-WU_station_pwd = "VpAEW0HV" # Replace YYYY with your Password
-WUcreds = "ID=" + WU_station_id + "&PASSWORD="+ WU_station_pwd
+# wu_station_id = "KTXMANSF125" # Replace XXXX with your PWS ID
+# wu_station_key = "VpAEW0HV" # Replace YYYY with your Password
+WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 date_str = "&dateutc=now"
 #action_str = "&action=updateraw"
 action_str = "&realtime=1&rtfreq=15"
@@ -42,7 +57,7 @@ action_str = "&realtime=1&rtfreq=15"
 # 146 = FT-020T WeatherRack2, #147 = F016TH SDL Temperature/Humidity Sensor
 print("Starting Wireless Read")
 #cmd = [ '/usr/local/bin/rtl_433', '-vv',  '-q', '-F', 'json', '-R', '146', '-R', '147']
-cmd = [ '/usr/local/bin/rtl_433', '-F', 'json', '-R', '146', '-R', '147']
+cmd = [ '/usr/local/bin/rtl_433', '-q', '-F', 'json', '-R', '146', '-R', '147']
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #   A few helper functions...
