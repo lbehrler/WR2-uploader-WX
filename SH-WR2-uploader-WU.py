@@ -36,6 +36,7 @@ WEATHER_UPLOAD = True
 b = [0, 0, 255]  # blue
 r = [255, 0, 0]  # red
 e = [0, 0, 0]  # empty
+
 # create images for up and down arrows
 arrow_up = [
     e, e, e, r, r, e, e, e,
@@ -75,7 +76,6 @@ wu_station_key = ''
 sense = None
 
 
-
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 # URL Formation and WU initialization 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -106,6 +106,26 @@ action_str = "&realtime=1&rtfreq=15"
 #wu_station_key = "YYYY" # Replace YYYY with your Password
 WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 date_str = "&dateutc=now"
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# initialize the Sense HAT object
+# ============================================================================
+try:
+    logging.info('Initializing the Sense HAT client')
+    sense = SenseHat()
+    # sense.set_rotation(180)
+    # then write some text to the Sense HAT
+    sense.show_message('Init', text_colour=[255, 255, 0], back_colour=[0, 0, 255])
+    # clear the screen
+    sense.clear()
+except:
+    logging.info('Unable to initialize the Sense HAT library')
+    logging.error('Exception type: {}'.format(type(e)))
+    logging.error('Error: {}'.format(sys.exc_info()[0]))
+    traceback.print_exc(file=sys.stdout)
+    sys.exit(1)
+
+logging.info('Initialization complete!')
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # 146 = FT-020T WeatherRack2, #147 = F016TH SDL Temperature/Humidity Sensor
