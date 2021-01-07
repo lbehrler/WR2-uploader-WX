@@ -46,9 +46,9 @@ winddirection = 1
 #/updateweatherstation.php?"
 WUurl = "https://rtupdate.wunderground.com/weatherstation\
 /updateweatherstation.php?"
-WU_station_id = "KTXMANSF125" # Replace XXXX with your PWS ID
-WU_station_pwd = "VpAEW0HV" # Replace YYYY with your Password
-WUcreds = "ID=" + WU_station_id + "&PASSWORD="+ WU_station_pwd
+# wu_station_id = "KTXMANSF125" # Replace XXXX with your PWS ID
+# wu_station_key = "VpAEW0HV" # Replace YYYY with your Password
+WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 date_str = "&dateutc=now"
 #action_str = "&action=updateraw"
 action_str = "&realtime=1&rtfreq=15"
@@ -57,7 +57,7 @@ action_str = "&realtime=1&rtfreq=15"
 # 146 = FT-020T WeatherRack2, #147 = F016TH SDL Temperature/Humidity Sensor
 print("Starting Wireless Read")
 #cmd = [ '/usr/local/bin/rtl_433', '-vv',  '-q', '-F', 'json', '-R', '146', '-R', '147']
-cmd = [ '/usr/local/bin/rtl_433', '-F', 'json', '-R', '146', '-R', '147']
+cmd = [ '/usr/local/bin/rtl_433', '-q', '-F', 'json', '-R', '146', '-R', '147']
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #   A few helper functions...
