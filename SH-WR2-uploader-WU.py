@@ -74,7 +74,15 @@ bars = [
 wu_station_id = ''
 wu_station_key = ''
 sense = None
+shMsg = ''
 
+# Setup the basic console logger
+format_str = '%(asctime)s %(levelname)s %(message)s'
+date_format = '%Y-%m-%d %H:%M:%S'
+logging.basicConfig(format=format_str, level=logging.INFO, datefmt=date_format)
+# When debugging, uncomment the following two lines
+# logger = logging.getLogger()
+# logger.setLevel(logging.DEBUG)
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 # URL Formation and WU initialization 
@@ -168,20 +176,20 @@ pulse = 0
 while True:
    #   Other processing can occur here as needed...
    #sys.stdout.write('Made it to processing step. \n')
-   
-   try:
-      src, line = q.get(timeout = 1)
-      #print(line.decode())
+
+    try:
+        src, line = q.get(timeout = 1)
+        #print(line.decode())
     except Empty:
-        pulse += 1
+	pulse += 1
     else: # got line
         pulse -= 1
         sLine = line.decode()
         print(sLine)
         #   See if the data is something we need to act on...
         if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)):
-            sys.stdout.write('WeatherSense Indoor T/H F016TH Found' + '\n')
-            sys.stdout.write('This is the raw data: ' + sLine + '\n')
+            logging.info('WeatherSense Indoor T/H F016TH Found' + '\n')
+            logging.info('This is the raw data: ' + sLine + '\n')
 
             # Variable Processing from JSON output from Indoor T/H unit for WU upload
             sys.stdout.write('Variable processing of Indoor T/H raw data. \n')
@@ -209,12 +217,33 @@ while True:
             # Check WU Feed Status
             print("Received " + str(r.status_code) + " " + str(r.text))
 
+            # Send the local data to the SenseHat
+            shMsg= "Temp: " + indtemp_str + " Hum: " + indhumidity_str
+    	    try:
+        	logging.info('Initializing the Sense HAT client')
+        	sense = SenseHat()
+        	# sense.set_rotation(180)
+        	# then write some text to the Sense HAT
+        	sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 255])
+        	# clear the screen
+        	sense.clear()
+                # display a red, up arrow
+                sense.set_pixels(arrow_up)
+		sense.clear()
+    	    except:
+        	logging.info('Unable to initialize the Sense HAT library')
+        	logging.error('Exception type: {}'.format(type(e)))
+        	logging.error('Error: {}'.format(sys.exc_info()[0]))
+        	traceback.print_exc(file=sys.stdout)
+        	sys.exit(1)
         if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
-            sys.stdout.write('WeatherSense WeatherRack2 FT020T found' + '\n')
-            sys.stdout.write('This is the raw data: ' + sLine + '\n')
-
+            logging.info('WeatherSense WeatherRack2 FT020T found' + '\n')
+            logging.info('This is the raw data: ' + sLine + '\n')
+            # Variable Processing from SH unit for WU upload
+            logging.info('Variable processing of SH raw data. \n')
+	    baro_str = "{0:.2f}".format (sense.get_pressure() * 0.0295300)
             # Variable Processing from JSON output from WR2 unit for WU upload
-            sys.stdout.write('Variable processing of WR2 raw data. \n')
+            logging.info('Variable processing of WR2 raw data. \n')
             raw_data = json.loads(sLine)
             humidity_str = "{0:.0f}".format(raw_data['humidity'])
             tempf = ((raw_data['temperature']-400)/10.0)
@@ -241,10 +270,11 @@ while True:
                 "&windgustmph=" + gustwind_str +
                 "&dailyrainin=" + cumrain_str +
                 "&uv=" + uv_str +
+		"&baromin=" + baro_str +
                 "&softwaretype=" + "RaspberryPi" +
                 action_str)
             # Show a copy of what you formed up and are uploading in HRF 
-            print (WUurl +
+            logging.info(WUurl +
                 WUcreds +
                 date_str +
                 "&tempf=" + temp_str +
@@ -255,6 +285,7 @@ while True:
                 "&windgustmph=" + gustwind_str +
                 "&dailyrainin=" + cumrain_str +
                 "&uv=" + uv_str +
+                "&baromin=" + baro_str +
                 "&softwaretype=" + "RaspberryPi" +
                 action_str)
             # Check WU Feed Status
