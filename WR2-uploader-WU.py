@@ -9,6 +9,7 @@ from threading  import Thread
 import json
 import datetime
 import time
+import logging
 from wuconfig import Config
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------# -------------------------------------------------------------------------------------------------------------------------------------------------------------$$-----------$
@@ -30,27 +31,32 @@ winddirection = 1
 # ============================================================================
 #  Read Weather Underground Configuration
 # ============================================================================
-    logging.info('Initializing Weather Underground configuration')
-    wu_station_id = Config.STATION_ID
-    wu_station_key = Config.STATION_KEY
-    if (wu_station_id is None) or (wu_station_key is None):
-        logging.info('Missing values from the Weather Underground configuration file')
-        sys.exit(1)
+logging.info('Initializing Weather Underground configuration')
+wu_station_id = Config.STATION_ID
+wu_station_key = Config.STATION_KEY
+if (wu_station_id is None) or (wu_station_key is None):
+    logging.info('Missing values from the Weather Underground configuration file')
+    sys.exit(1)
 
-    # we made it this far, so it must have worked...
-    logging.info('Successfully read Weather Underground configuration')
-    logging.info('Station ID: {}'.format(wu_station_id))
-    logging.debug('Station key: {}'.format(wu_station_key))
+# we made it this far, so it must have worked...
+logging.info('Successfully read Weather Underground configuration')
+logging.info('Station ID: {}'.format(wu_station_id))
+logging.debug('Station key: {}'.format(wu_station_key))
+
 # create a string to hold the first part of the URL
+# used for standard upload
 #WUurl = "https://weatherstation.wunderground.com/weatherstation\
 #/updateweatherstation.php?"
+
+# rapid fire server
 WUurl = "https://rtupdate.wunderground.com/weatherstation\
 /updateweatherstation.php?"
-# wu_station_id = "KTXMANSF125" # Replace XXXX with your PWS ID
-# wu_station_key = "VpAEW0HV" # Replace YYYY with your Password
+# wu_station_id = "XXXX" # Replace XXXX with your PWS ID
+# wu_station_key = "YYYY" # Replace YYYY with your Password
 WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 date_str = "&dateutc=now"
-#action_str = "&action=updateraw"
+
+# action_str = "&action=updateraw"
 action_str = "&realtime=1&rtfreq=15"
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -112,7 +118,7 @@ while True:
         if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)):
             sys.stdout.write('WeatherSense Indoor T/H F016TH Found' + '\n')
             sys.stdout.write('This is the raw data: ' + sLine + '\n')
-            
+
             # Variable Processing from JSON output from Indoor T/H unit for WU upload
             sys.stdout.write('Variable processing of Indoor T/H raw data. \n')
             raw_data = json.loads(sLine)
@@ -138,7 +144,7 @@ while True:
                 action_str)
             # Check WU Feed Status
             print("Received " + str(r.status_code) + " " + str(r.text))
-            
+
         if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
             sys.stdout.write('WeatherSense WeatherRack2 FT020T found' + '\n')
             sys.stdout.write('This is the raw data: ' + sLine + '\n')
