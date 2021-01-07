@@ -1,6 +1,7 @@
-# Weather Underground Upload Script for WeatherSense SwitchDoc Labs Weather Sensors
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Weather Underground Upload Script for WeatherSense SwitchDoc Labs Weather in combination with the SenseHat Sensors
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Adapted from Switch Doc Labs readWeatherSensors.py script for testing the WeatherRack2
+# Adapted from John Wargo SH to WU script https://github.com/johnwargo/pi_weather_station/blob/master/weather_station.py
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------
 import sys
 import requests
@@ -10,32 +11,81 @@ import json
 import datetime
 import time
 import logging
+
+from sense_hat import SenseHat
+
 from wuconfig import Config
 
-# -----------------------------------------------------------------------------------------------------------------------------------------------------------# -------------------------------------------------------------------------------------------------------------------------------------------------------------$$-----------$
-# Test Data
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Constants
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-humidity = 59.588
-ambient_temp = 23.456
-pressure = 1067.890
-ground_temp = 16.345
-wind_speed = 5.6129
-wind_gust = 12.9030
-wind_average = 180
-rainfall = 1.270
-winddirection = 1
+DEBUG_MODE = True
+# specifies how often to measure values from the Sense HAT (in minutes)
+MEASUREMENT_INTERVAL = 1  # minutes
+# Set to False when testing the code and/or hardware
+# Set to True to enable upload of weather data to Weather Underground
+WEATHER_UPLOAD = True
+# some string constants
+# SINGLE_HASH = '#'
+# HASHES = '############################################'
 
-# -------------------------------------------------------------------------------------------------------------------------------------------------------------$
+# constants used to display an up and down arrows plus bars
+# modified from https://www.raspberrypi.org/learning/getting-started-with-the-sense-hat/worksheet/
+# set up the colours (blue, red, empty)
+b = [0, 0, 255]  # blue
+r = [255, 0, 0]  # red
+e = [0, 0, 0]  # empty
+# create images for up and down arrows
+arrow_up = [
+    e, e, e, r, r, e, e, e,
+    e, e, r, r, r, r, e, e,
+    e, r, e, r, r, e, r, e,
+    r, e, e, r, r, e, e, r,
+    e, e, e, r, r, e, e, e,
+    e, e, e, r, r, e, e, e,
+    e, e, e, r, r, e, e, e,
+    e, e, e, r, r, e, e, e
+]
+arrow_down = [
+    e, e, e, b, b, e, e, e,
+    e, e, e, b, b, e, e, e,
+    e, e, e, b, b, e, e, e,
+    e, e, e, b, b, e, e, e,
+    b, e, e, b, b, e, e, b,
+    e, b, e, b, b, e, b, e,
+    e, e, b, b, b, b, e, e,
+    e, e, e, b, b, e, e, e
+]
+bars = [
+    e, e, e, e, e, e, e, e,
+    e, e, e, e, e, e, e, e,
+    r, r, r, r, r, r, r, r,
+    r, r, r, r, r, r, r, r,
+    b, b, b, b, b, b, b, b,
+    b, b, b, b, b, b, b, b,
+    e, e, e, e, e, e, e, e,
+    e, e, e, e, e, e, e, e
+]
+
+# Initialize some global variables
+# last_temp = 0
+wu_station_id = ''
+wu_station_key = ''
+sense = None
+
+
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------
 # URL Formation and WU initialization 
-   
-# ============================================================================
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #  Read Weather Underground Configuration
-# ============================================================================
 logging.info('Initializing Weather Underground configuration')
 wu_station_id = Config.STATION_ID
 wu_station_key = Config.STATION_KEY
 if (wu_station_id is None) or (wu_station_key is None):
-    logging.info('Missing values from the Weather Underground configuration file')
+    logging.warning('Missing values from the Weather Underground configuration file')
     sys.exit(1)
 
 # we made it this far, so it must have worked...
@@ -43,25 +93,23 @@ logging.info('Successfully read Weather Underground configuration')
 logging.info('Station ID: {}'.format(wu_station_id))
 logging.debug('Station key: {}'.format(wu_station_key))
 
-# create a string to hold the first part of the URL
-# used for standard upload
-#WUurl = "https://weatherstation.wunderground.com/weatherstation\
-#/updateweatherstation.php?"
+# Create a string to hold the first part of the URL
+# Standard upload
+#WUurl = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?"
+#action_str = "&action=updateraw"
 
-# rapid fire server
-WUurl = "https://rtupdate.wunderground.com/weatherstation\
-/updateweatherstation.php?"
-# wu_station_id = "XXXX" # Replace XXXX with your PWS ID
-# wu_station_key = "YYYY" # Replace YYYY with your Password
+# Rapid fire server
+WUurl = "https://rtupdate.wunderground.com/weatherstation/updateweatherstation.php?"
+action_str = "&realtime=1&rtfreq=15"
+
+#wu_station_id = "XXXX" # Replace XXXX with your PWS ID
+#wu_station_key = "YYYY" # Replace YYYY with your Password
 WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 date_str = "&dateutc=now"
 
-# action_str = "&action=updateraw"
-action_str = "&realtime=1&rtfreq=15"
-
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # 146 = FT-020T WeatherRack2, #147 = F016TH SDL Temperature/Humidity Sensor
-print("Starting Wireless Read")
+logging.info('Starting Wireless Read')
 #cmd = [ '/usr/local/bin/rtl_433', '-vv',  '-q', '-F', 'json', '-R', '146', '-R', '147']
 cmd = [ '/usr/local/bin/rtl_433', '-q', '-F', 'json', '-R', '146', '-R', '147']
 
@@ -70,10 +118,6 @@ cmd = [ '/usr/local/bin/rtl_433', '-q', '-F', 'json', '-R', '146', '-R', '147']
 
 def nowStr():
     return( datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S'))
-
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-#stripped = lambda s: "".join(i for i in s if 31 < ord(i) < 127)
-
 
 #   We're using a queue to capture output as it occurs
 try:
@@ -102,12 +146,12 @@ t.start()
 
 pulse = 0
 while True:
-    #   Other processing can occur here as needed...
-    #sys.stdout.write('Made it to processing step. \n')
-
-    try:
-        src, line = q.get(timeout = 1)
-        #print(line.decode())
+   #   Other processing can occur here as needed...
+   #sys.stdout.write('Made it to processing step. \n')
+   
+   try:
+      src, line = q.get(timeout = 1)
+      #print(line.decode())
     except Empty:
         pulse += 1
     else: # got line
