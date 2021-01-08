@@ -11,6 +11,7 @@ import json
 import datetime
 import time
 import logging
+import math
 
 from sense_hat import SenseHat
 
@@ -117,13 +118,13 @@ date_str = "&dateutc=now"
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # initialize the Sense HAT object
-# ============================================================================
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
 try:
     logging.info('Initializing the Sense HAT client')
     sense = SenseHat()
     # sense.set_rotation(180)
     # then write some text to the Sense HAT
-    sense.show_message('Init', text_colour=[255, 255, 0], back_colour=[0, 0, 255])
+    sense.show_message('Initialized', text_colour=[255, 255, 0], back_colour=[0, 0, 255])
     # clear the screen
     sense.clear()
 except:
@@ -158,6 +159,21 @@ def enqueue_output(src, out, queue):
     for line in iter(out.readline, b''):
         queue.put(( src, line))
     out.close()
+
+def get_dew_point_c(t_air_c, rel_humidity):
+    """Compute the dew point in degrees Celsius
+
+    :param t_air_c: current ambient temperature in degrees Celsius
+    :type t_air_c: float
+    :param rel_humidity: relative humidity in %
+    :type rel_humidity: float
+    :return: the dew point in degrees Celsius
+    :rtype: float
+    """
+    A = 17.27
+    B = 237.7
+    alpha = ((A * t_air_c) / (B + t_air_c)) + math.log(rel_humidity/100.0)
+    return (B * alpha) / (A - alpha)
 
 #   Create our sub-process...
 #   Note that we need to either ignore output from STDERR or merge it with STDOUT due to a limitation/bug somewhere under the covers of "subprocess"
@@ -218,17 +234,16 @@ while True:
             print("Received " + str(r.status_code) + " " + str(r.text))
 
             # Send the local data to the SenseHat
-            shMsg= "Temp: " + indtemp_str + " Hum: " + indhumidity_str
+            shMsg= "T: " + indtemp_str + " H: " + indhumidity_str
     	    try:
         	logging.info('Initializing the Sense HAT client')
-        	sense = SenseHat()
-        	# sense.set_rotation(180)
-        	# then write some text to the Sense HAT
+        	#sense = SenseHat()
         	sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 255])
         	# clear the screen
         	sense.clear()
                 # display a red, up arrow
                 sense.set_pixels(arrow_up)
+		time.sleep(1)
 		sense.clear()
     	    except:
         	logging.info('Unable to initialize the Sense HAT library')
@@ -237,7 +252,7 @@ while True:
         	traceback.print_exc(file=sys.stdout)
         	sys.exit(1)
         if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
-            logging.info('WeatherSense WeatherRack2 FT020T found' + '\n')
+            logging.info("WeatherSense WeatherRack2 FT020T found' + '\n")
             logging.info('This is the raw data: ' + sLine + '\n')
             # Variable Processing from SH unit for WU upload
             logging.info('Variable processing of SH raw data. \n')
@@ -246,11 +261,16 @@ while True:
             logging.info('Variable processing of WR2 raw data. \n')
             raw_data = json.loads(sLine)
             humidity_str = "{0:.0f}".format(raw_data['humidity'])
+	    humpct = (raw_data['humidity'])
             tempf = ((raw_data['temperature']-400)/10.0)
             tempc = ((tempf-32.0)*5.0/9.0)
             temp_str =  "{0:.1f}".format((raw_data['temperature']-400.0)/10.0)
-            dewptc  = ((tempc)-((100-raw_data['humidity'])/5))
-            dewpt_str = "{0:.1f}".format((dewptc *9.0/5.0)+32.0)
+            # Dew Point Calcs
+	    # dewptc  = ((tempc)-((100-raw_data['humidity'])/5))
+	    dewptc = get_dew_point_c(tempc, humpct)
+	    dewpt_str = "{0:.1f}".format((dewptc *9.0/5.0)+32.0)
+	    print(dewptc)
+	    print(dewpt_str)
             winddir_str = "{0:.0f}".format(raw_data['winddirection'])
             avewind_str = "{0:.2f}".format(raw_data['avewindspeed'] * 0.2237)
             gustwind_str = "{0:.2f}".format(raw_data['gustwindspeed'] * 0.2237)
