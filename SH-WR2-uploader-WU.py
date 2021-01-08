@@ -118,7 +118,7 @@ date_str = "&dateutc=now"
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # initialize the Sense HAT object
----------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 try:
     logging.info('Initializing the Sense HAT client')
     sense = SenseHat()
@@ -269,8 +269,6 @@ while True:
 	    # dewptc  = ((tempc)-((100-raw_data['humidity'])/5))
 	    dewptc = get_dew_point_c(tempc, humpct)
 	    dewpt_str = "{0:.1f}".format((dewptc *9.0/5.0)+32.0)
-	    print(dewptc)
-	    print(dewpt_str)
             winddir_str = "{0:.0f}".format(raw_data['winddirection'])
             avewind_str = "{0:.2f}".format(raw_data['avewindspeed'] * 0.2237)
             gustwind_str = "{0:.2f}".format(raw_data['gustwindspeed'] * 0.2237)
