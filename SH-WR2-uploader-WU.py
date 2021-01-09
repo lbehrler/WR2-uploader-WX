@@ -132,7 +132,7 @@ except:
     logging.info('Unable to initialize the Sense HAT library')
     logging.error('Exception type: {}'.format(type(e)))
     logging.error('Error: {}'.format(sys.exc_info()[0]))
-    traceback.print_exc(file=sys.stdout)
+    print (file=sys.stdout)
     sys.exit(1)
 
 logging.info('Initialization complete!')
@@ -304,7 +304,7 @@ while True:
             print("Received " + str(r.status_code) + " " + str(r.text))
             # display a red, up arrow
             sense.set_pixels(arrow_up)
-            time.sleep(5)
+            time.sleep(3)
             sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
             sense.clear()
             time.sleep(5)
