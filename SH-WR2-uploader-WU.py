@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Weather Underground Upload Script for WeatherSense SwitchDoc Labs Weather in combination with the SenseHat Sensors
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Adapted from Switch Doc Labs readWeatherSensors.py script for testing the WeatherRack2
@@ -124,7 +125,7 @@ try:
     sense = SenseHat()
     # sense.set_rotation(180)
     # then write some text to the Sense HAT
-    sense.show_message('Initialized', text_colour=[255, 255, 0], back_colour=[0, 0, 255])
+    sense.show_message('On!', text_colour=[255, 0, 0], back_colour=[0, 0, 0])
     # clear the screen
     sense.clear()
 except:
@@ -190,8 +191,8 @@ t.start()
 
 pulse = 0
 while True:
-   #   Other processing can occur here as needed...
-   #sys.stdout.write('Made it to processing step. \n')
+    #   Other processing can occur here as needed...
+    #sys.stdout.write('Made it to processing step. \n')
 
     try:
         src, line = q.get(timeout = 1)
@@ -206,52 +207,40 @@ while True:
         if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)):
             logging.info('WeatherSense Indoor T/H F016TH Found' + '\n')
             logging.info('This is the raw data: ' + sLine + '\n')
-
             # Variable Processing from JSON output from Indoor T/H unit for WU upload
             sys.stdout.write('Variable processing of Indoor T/H raw data. \n')
             raw_data = json.loads(sLine)
             indhumidity_str = "{0:.0f}".format(raw_data['humidity'])
             indtemp_str =  "{0:.1f}".format(raw_data['temperature_F'])
-
             # Form URL into WU format and Send
-            r= requests.get(
-                WUurl +
-                WUcreds +
-                date_str +
-                "&indoortempf=" + indtemp_str +
-                "&indoorhumidity=" + indhumidity_str +
-                "&softwaretype=" + "RaspberryPi" +
-                action_str)
+            #r= requests.get(
+            #    WUurl +
+            #    WUcreds +
+            #    date_str +
+            #    "&indoortempf=" + indtemp_str +
+            #    "&indoorhumidity=" + indhumidity_str +
+            #    "&softwaretype=" + "RaspberryPi" +
+            #    action_str)
             # Show a copy of what you formed up and are uploading in HRF 
-            print (WUurl +
-                WUcreds +
-                date_str +
-                "&indoortempf=" + indtemp_str +
-                "&indoorhumidity=" + indhumidity_str +
-                "&softwaretype=" + "RaspberryPi" +
-                action_str)
+            #print (WUurl +
+            #    WUcreds +
+            #    date_str +
+            #    "&indoortempf=" + indtemp_str +
+            #    "&indoorhumidity=" + indhumidity_str +
+            #    "&softwaretype=" + "RaspberryPi" +
+            #    action_str)
             # Check WU Feed Status
-            print("Received " + str(r.status_code) + " " + str(r.text))
-
+            #print("Received " + str(r.status_code) + " " + str(r.text))
+            # display a red, up arrow
+            #sense.set_pixels(arrow_up)
+            #time.sleep(1)
+            #sense.clear()
             # Send the local data to the SenseHat
             shMsg= "T: " + indtemp_str + " H: " + indhumidity_str
-    	    try:
-        	logging.info('Initializing the Sense HAT client')
-        	#sense = SenseHat()
-        	sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 255])
-        	# clear the screen
-        	sense.clear()
-                # display a red, up arrow
-                sense.set_pixels(arrow_up)
-		time.sleep(1)
-		sense.clear()
-    	    except:
-        	logging.info('Unable to initialize the Sense HAT library')
-        	logging.error('Exception type: {}'.format(type(e)))
-        	logging.error('Error: {}'.format(sys.exc_info()[0]))
-        	traceback.print_exc(file=sys.stdout)
-        	sys.exit(1)
-        if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
+            sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 51, 0])
+            # clear the screen
+            sense.clear()
+    	if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
             logging.info("WeatherSense WeatherRack2 FT020T found' + '\n")
             logging.info('This is the raw data: ' + sLine + '\n')
             # Variable Processing from SH unit for WU upload
@@ -275,6 +264,11 @@ while True:
             cumrain_str = "{0:.2f}".format(raw_data['cumulativerain'] * 0.003937)
             uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
             light_str = "{0:.0f}".format(raw_data['light'])
+            # Send the local data to the SenseHat
+            shMsg= "T: " + temp_str + " H: " + humidity_str
+            sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
+            # clear the screen
+            sense.clear()
             # Form URL into WU format and Send
             r= requests.get(
                 WUurl +
@@ -308,6 +302,11 @@ while True:
                 action_str)
             # Check WU Feed Status
             print("Received " + str(r.status_code) + " " + str(r.text))
-            #time.sleep(90)
+            # display a red, up arrow
+            sense.set_pixels(arrow_up)
+            time.sleep(5)
+            sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
+            sense.clear()
+            time.sleep(5)
 
     sys.stdout.flush()
