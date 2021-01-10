@@ -37,6 +37,8 @@ WEATHER_UPLOAD = True
 # set up the colours (blue, red, empty)
 b = [0, 0, 255]  # blue
 r = [255, 0, 0]  # red
+g = [0,128,0] # green
+y = [255,255,0] # yellow
 e = [0, 0, 0]  # empty
 
 # create images for up and down arrows
@@ -69,6 +71,16 @@ bars = [
     b, b, b, b, b, b, b, b,
     e, e, e, e, e, e, e, e,
     e, e, e, e, e, e, e, e
+]
+plus = [
+    e, e, e, g, g, e, e, e,
+    e, e, e, g, g, e, e, e,
+    e, e, e, g, g, e, e, e,
+    g, g, g, g, g, g, g, g,
+    g, g, g, g, g, g, g, g,
+    e, e, e, g, g, e, e, e,
+    e, e, e, g, g, e, e, e,
+    e, e, e, g, g, e, e, e,
 ]
 
 # Initialize some global variables
@@ -123,9 +135,9 @@ date_str = "&dateutc=now"
 try:
     logging.info('Initializing the Sense HAT client')
     sense = SenseHat()
-    sense.set_rotation(180)
+    sense.set_rotation(90)
     # then write some text to the Sense HAT
-    sense.show_message('On!', text_colour=[255, 0, 0], back_colour=[0, 0, 0])
+    sense.show_message('Power Up', text_colour=r, back_colour=[0, 0, 0])
     # clear the screen
     sense.clear()
 except:
@@ -198,7 +210,7 @@ while True:
         src, line = q.get(timeout = 1)
         #print(line.decode())
     except Empty:
-	pulse += 1
+        pulse += 1
     else: # got line
         pulse -= 1
         sLine = line.decode()
@@ -240,24 +252,24 @@ while True:
             sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 51, 0])
             # clear the screen
             sense.clear()
-    	if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
+        if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
             logging.info("WeatherSense WeatherRack2 FT020T found' + '\n")
             logging.info('This is the raw data: ' + sLine + '\n')
             # Variable Processing from SH unit for WU upload
             logging.info('Variable processing of SH raw data. \n')
-	    baro_str = "{0:.2f}".format (sense.get_pressure() * 0.0295300)
+            baro_str = "{0:.2f}".format (sense.get_pressure() * 0.0295300)
             # Variable Processing from JSON output from WR2 unit for WU upload
             logging.info('Variable processing of WR2 raw data. \n')
             raw_data = json.loads(sLine)
             humidity_str = "{0:.0f}".format(raw_data['humidity'])
-	    humpct = (raw_data['humidity'])
+            humpct = (raw_data['humidity'])
             tempf = ((raw_data['temperature']-400)/10.0)
             tempc = ((tempf-32.0)*5.0/9.0)
             temp_str =  "{0:.1f}".format((raw_data['temperature']-400.0)/10.0)
             # Dew Point Calcs
-	    # dewptc  = ((tempc)-((100-raw_data['humidity'])/5))
-	    dewptc = get_dew_point_c(tempc, humpct)
-	    dewpt_str = "{0:.1f}".format((dewptc *9.0/5.0)+32.0)
+            # dewptc  = ((tempc)-((100-raw_data['humidity'])/5))
+            dewptc = get_dew_point_c(tempc, humpct)
+            dewpt_str = "{0:.1f}".format((dewptc *9.0/5.0)+32.0)
             winddir_str = "{0:.0f}".format(raw_data['winddirection'])
             avewind_str = "{0:.2f}".format(raw_data['avewindspeed'] * 0.2237)
             gustwind_str = "{0:.2f}".format(raw_data['gustwindspeed'] * 0.2237)
@@ -282,7 +294,7 @@ while True:
                 "&windgustmph=" + gustwind_str +
                 "&dailyrainin=" + cumrain_str +
                 "&uv=" + uv_str +
-		"&baromin=" + baro_str +
+                "&baromin=" + baro_str +
                 "&softwaretype=" + "RaspberryPi" +
                 action_str)
             # Show a copy of what you formed up and are uploading in HRF 
@@ -303,10 +315,15 @@ while True:
             # Check WU Feed Status
             print("Received " + str(r.status_code) + " " + str(r.text))
             # display a red, up arrow
-            sense.set_pixels(arrow_up)
-            time.sleep(3)
-            sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
-            sense.clear()
-            time.sleep(5)
+            if (r.status_code == 200):
+                sense.set_pixels(plus)
+                time.sleep(2)
+                sense.clear()
+            else:
+                sense.set_pixels(arrow_up)
+                time.sleep(5)
+                sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
+                sense.clear()
+            time.sleep(10) #pause for a few seconds       
 
     sys.stdout.flush()
