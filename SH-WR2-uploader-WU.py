@@ -37,9 +37,9 @@ WEATHER_UPLOAD = True
 # set up the colours (blue, red, empty)
 b = [0, 0, 255]  # blue
 r = [255, 0, 0]  # red
-g = [0,128,0] # green
-y = [255,255,0] # yellow
-e = [0, 0, 0]  # empty
+g = [0,128,0]    # green
+y = [255,255,0]  # yellow
+e = [0, 0, 0]    # empty
 
 # create images for up and down arrows
 arrow_up = [
