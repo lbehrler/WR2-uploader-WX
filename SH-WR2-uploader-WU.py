@@ -123,7 +123,7 @@ date_str = "&dateutc=now"
 try:
     logging.info('Initializing the Sense HAT client')
     sense = SenseHat()
-    # sense.set_rotation(180)
+    sense.set_rotation(180)
     # then write some text to the Sense HAT
     sense.show_message('On!', text_colour=[255, 0, 0], back_colour=[0, 0, 0])
     # clear the screen
@@ -132,7 +132,7 @@ except:
     logging.info('Unable to initialize the Sense HAT library')
     logging.error('Exception type: {}'.format(type(e)))
     logging.error('Error: {}'.format(sys.exc_info()[0]))
-    print (file=sys.stdout)
+    print (sys.stdout)
     sys.exit(1)
 
 logging.info('Initialization complete!')
