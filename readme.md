@@ -4,6 +4,9 @@
 
 This is a Raspberry Pi project that retrieves the weather data values (temperature, humidity, wind speed, ..., etc) in JSON format from the Weather Rack 2.  The data is manipulated to meet the [Weather Underground](www.weatherunderground.com); format for uploading of PWS data. I purchased a WeatherRack2 as my first weather station in 2020 and wrote this program to adapt the data feed for my use in both uploading to Weather Underground and in sending basic data to a display (in this case an AstoPi Sense Hat.  There is code included in the distribution to use a Sense Hat or to forgo the display and have a basic data processor and uploader. 
 
+## Acknowledgements
+Some of this code is adapted from Switch Doc Labs readWeatherSensors.py script for testing the WeatherRack2 and from John Wargo's SH to WU script https://github.com/johnwargo/pi_weather_station/blob/master/weather_station.py
+
 ## Required Components
 
 This project is quite easy to make.   
