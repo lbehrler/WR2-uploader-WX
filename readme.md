@@ -8,11 +8,11 @@ This is a Raspberry Pi project that retrieves the weather data values (temperatu
 
 This project is quite easy to make.   
 
-###The Basic [no display] project:
+### The Basic [no display] project:
 + [Raspberry PI Zero, 3 or 4] (https://www.raspberrypi.org/products/) with appropriate power supply. During the initial build I constructed the project with a Pi Zero W. I later updated the project to a Pi 4 as a test bed and ulitimately moved the project to a Pi 3B+.
 + Raspberry PI case.
 
-###The more advanced project with a Sense Hat display:
+### The more advanced project with a Sense Hat display:
 + [Raspberry 3 or 4] (https://www.raspberrypi.org/products/) with appropriate power supply.  During the initial build I constructed the project with a Pi Zero W.   I later updated the project to a Pi 4 as a test bed and ulitimately moved the project to a Pi 3B+.
 + [Astro Pi Sense Hat](https://www.adafruit.com/product/2738).
 + Raspberry PI "hat" case.  There are several cases available for the Pi 3 and 4, make sure if you are using a Sense Hat you purchase a "hat" case to give enough room for the hardware.
