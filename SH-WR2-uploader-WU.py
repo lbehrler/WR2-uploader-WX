@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # Weather Underground Upload Script for WeatherSense SwitchDoc Labs Weather in combination with the SenseHat Sensors
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Adapted from Switch Doc Labs readWeatherSensors.py script for testing the WeatherRack2
@@ -248,7 +249,7 @@ while True:
             #time.sleep(1)
             #sense.clear()
             # Send the local data to the SenseHat
-            shMsg= "T: " + indtemp_str + " H: " + indhumidity_str
+            shMsg= indtemp_str + "' " + " " + indhumidity_str + "%"
             sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 51, 0])
             # clear the screen
             sense.clear()
@@ -277,7 +278,7 @@ while True:
             uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
             light_str = "{0:.0f}".format(raw_data['light'])
             # Send the local data to the SenseHat
-            shMsg= "T: " + temp_str + " H: " + humidity_str
+            shMsg= temp_str +  "' " + " " + humidity_str + "%"
             sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
             # clear the screen
             sense.clear()
@@ -314,16 +315,19 @@ while True:
                 action_str)
             # Check WU Feed Status
             print("Received " + str(r.status_code) + " " + str(r.text))
-            # display a red, up arrow
+            # display  green cross for success or a red arrow for fail 
             if (r.status_code == 200):
                 sense.set_pixels(plus)
                 time.sleep(2)
                 sense.clear()
             else:
                 sense.set_pixels(arrow_up)
-                time.sleep(5)
+		time.sleep(1)
+		sense.clear()
+		sense.set_pixels(arrow_up)
+                time.sleep(1)
                 sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
                 sense.clear()
-            time.sleep(10) #pause for a few seconds       
+            time.sleep(3) #pause for a few seconds       
 
     sys.stdout.flush()
