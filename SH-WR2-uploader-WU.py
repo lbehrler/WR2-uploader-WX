@@ -30,7 +30,7 @@ except ImportError:
 
 DEBUG_MODE = True
 # specifies how often to measure values from the Sense HAT (in minutes)
-MEASUREMENT_INTERVAL = 1  # minutes
+MEASUREMENT_INTERVAL = 5  # seconds
 # Set to False when testing the code and/or hardware
 # Set to True to enable upload of weather data to Weather Underground
 WEATHER_UPLOAD = True
@@ -130,8 +130,6 @@ logging.debug('Station key: {}'.format(wu_station_key))
 WUurl = "https://rtupdate.wunderground.com/weatherstation/updateweatherstation.php?"
 action_str = "&realtime=1&rtfreq=15"
 
-#wu_station_id = "XXXX" # Replace XXXX with your PWS ID
-#wu_station_key = "YYYY" # Replace YYYY with your Password
 WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 date_str = "&dateutc=now"
 
@@ -320,7 +318,7 @@ while True:
                 action_str)
             # Check WU Feed Status
             print("Received " + str(r.status_code) + " " + str(r.text))
-            # display  green cross for success or a red arrow for fail 
+            # display  green cross for success or a red arrow for fail
             if (r.status_code == 200):
                 sense.set_pixels(plus)
                 time.sleep(2)
@@ -333,6 +331,6 @@ while True:
                 time.sleep(1)
                 sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
                 sense.clear()
-            time.sleep(3) #pause for a few seconds       
+            time.sleep(MEASUREMENT_INTERVAL) #pause for a few seconds
 
     sys.stdout.flush()
