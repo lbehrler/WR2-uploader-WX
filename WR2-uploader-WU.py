@@ -216,20 +216,6 @@ while True:
                 "&softwaretype=" + "RaspberryPi" +
                 action_str)
 
-            # Show a copy of what you formed up and are uploading in HRF 
-            print (WUurl +
-                WUcreds +
-                date_str +
-                "&tempf=" + temp_str +
-                "&humidity=" + humidity_str +
-                "&dewptf=" + dewpt_str +
-                "&winddir=" + winddir_str  +
-                "&windspeedmph" + avewind_str +
-                "&windgustmph=" + gustwind_str +
-                "&dailyrainin=" + cumrain_str +
-                "&uv=" + uv_str +
-                "&softwaretype=" + "RaspberryPi" +
-                action_str)
             # Check WU Feed Status
             print("Received " + str(r.status_code) + " " + str(r.text))
             time.sleep(MEASUREMENT_INTERVAL)
