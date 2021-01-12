@@ -10,6 +10,7 @@ import json
 import datetime
 import time
 from wuconfig import Config
+import math
 
 try:
     from urllib import urlencode
@@ -19,21 +20,19 @@ except ImportError:
 # Constants
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# specifies how often to measure values from the Sense HAT (in minutes)
-MEASUREMENT_INTERVAL = 5  # in seconds
+# specifies how often to measure values from Weather Rack (in seconds)
+MEASUREMENT_INTERVAL = 180  # in seconds
 # Set to False when testing the code and/or hardware
 # Set to True to enable upload of weather data to Weather Underground
 WEATHER_UPLOAD = True
 # some string constants
-# SINGLE_HASH = '#'
-# HASHES = '############################################'
 wu_station_id = ''
 wu_station_key = ''
 
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------$
-# URL Formation and WU initialization 
-   
+# URL Formation and WU initialization
+
 # ============================================================================
 #  Read Weather Underground Configuration
 # ============================================================================
@@ -56,8 +55,7 @@ sys.stdout.write('Station ID: {}'.format(wu_station_id))
 # rapid fire server
 WUurl = "https://rtupdate.wunderground.com/weatherstation\
 /updateweatherstation.php?"
-# wu_station_id = "XXXX" # Replace XXXX with your PWS ID
-# wu_station_key = "YYYY" # Replace YYYY with your Password
+
 WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 date_str = "&dateutc=now"
 
@@ -91,7 +89,7 @@ def enqueue_output(src, out, queue):
     for line in iter(out.readline, b''):
         queue.put(( src, line))
     out.close()
-    
+
 def get_dew_point_c(t_air_c, rel_humidity):
     """Compute the dew point in degrees Celsius
 
@@ -147,14 +145,14 @@ while True:
             indtemp_str =  "{0:.1f}".format(raw_data['temperature_F'])
 
             # Form URL into WU format and Send
-            r= requests.get(
-                WUurl +
-                WUcreds +
-                date_str +
-                "&indoortempf=" + indtemp_str +
-                "&indoorhumidity=" + indhumidity_str +
-                "&softwaretype=" + "RaspberryPi" +
-                action_str)
+            #r= requests.get(
+            #    WUurl +
+            #    WUcreds +
+            #    date_str +
+            #    "&indoortempf=" + indtemp_str +
+            #    "&indoorhumidity=" + indhumidity_str +
+            #    "&softwaretype=" + "RaspberryPi" +
+            #    action_str)
             # Show a copy of what you formed up and are uploading in HRF 
             print (WUurl +
                 WUcreds +
