@@ -19,6 +19,11 @@ from sense_hat import SenseHat
 
 from wuconfig import Config
 
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
+
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Constants
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -107,8 +112,8 @@ logging.basicConfig(format=format_str, level=logging.INFO, datefmt=date_format)
 logging.info('Initializing Weather Underground configuration')
 wu_station_id = Config.STATION_ID
 wu_station_key = Config.STATION_KEY
-if (wu_station_id is None) or (wu_station_key is None):
-    logging.warning('Missing values from the Weather Underground configuration file')
+if (wu_station_id == "") or (wu_station_key == ""):
+    logging.error('Missing values from the Weather Underground configuration file')
     sys.exit(1)
 
 # we made it this far, so it must have worked...
@@ -322,9 +327,9 @@ while True:
                 sense.clear()
             else:
                 sense.set_pixels(arrow_up)
-		time.sleep(1)
-		sense.clear()
-		sense.set_pixels(arrow_up)
+                time.sleep(1)
+                sense.clear()
+                sense.set_pixels(arrow_up)
                 time.sleep(1)
                 sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
                 sense.clear()

@@ -1,4 +1,4 @@
 class Config:
     # Weather Underground
-    STATION_ID = ""
-    STATION_KEY = ""
+    STATION_ID = "xxxx"
+    STATION_KEY = "xxxx"
