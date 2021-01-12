@@ -49,18 +49,18 @@ sys.stdout.write('Station ID: {}'.format(wu_station_id))
 
 # create a string to hold the first part of the URL
 # used for standard upload
-#WUurl = "https://weatherstation.wunderground.com/weatherstation\
-#/updateweatherstation.php?"
+WUurl = "https://weatherstation.wunderground.com/weatherstation\
+/updateweatherstation.php?"
 
 # rapid fire server
-WUurl = "https://rtupdate.wunderground.com/weatherstation\
-/updateweatherstation.php?"
+#WUurl = "https://rtupdate.wunderground.com/weatherstation\
+#/updateweatherstation.php?"
 
 WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 date_str = "&dateutc=now"
 
-# action_str = "&action=updateraw"
-action_str = "&realtime=1&rtfreq=15"
+action_str = "&action=updateraw"
+#action_str = "&realtime=1&rtfreq=15"
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # 146 = FT-020T WeatherRack2, #147 = F016TH SDL Temperature/Humidity Sensor
@@ -199,7 +199,7 @@ while True:
                 "&windgustmph=" + gustwind_str +
                 "&dailyrainin=" + cumrain_str +
                 "&uv=" + uv_str +
-                "&softwaretype=" + "RaspberryPi" +
+                "&softwaretype=" + "R-Pi-0W" +
                 action_str)
             # Show a copy of what you formed up and are uploading in HRF 
             sys.stdout.write(WUurl +
@@ -213,7 +213,7 @@ while True:
                 "&windgustmph=" + gustwind_str +
                 "&dailyrainin=" + cumrain_str +
                 "&uv=" + uv_str +
-                "&softwaretype=" + "RaspberryPi" +
+                "&softwaretype=" + "R-Pi-0W" +
                 action_str)
 
             # Check WU Feed Status
