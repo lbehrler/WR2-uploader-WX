@@ -162,7 +162,7 @@ while True:
                 "&softwaretype=" + "RaspberryPi" +
                 action_str)
             # Check WU Feed Status
-            print("Received " + str(r.status_code) + " " + str(r.text))
+            # print("Received " + str(r.status_code) + " " + str(r.text))
 
         if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
             sys.stdout.write('WeatherSense WeatherRack2 FT020T found' + '\n')
