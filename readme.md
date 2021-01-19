@@ -24,7 +24,7 @@ This project is quite easy to make.
 
 The project folder contains several files and one folder:
 
-+ `WUconfig.py` - This is the project's external service configuration file, it provides the weather station with details about your Weather Underground station.
++ `wuconfig.py` - This is the project's external service configuration file, it provides the weather station with details about your Weather Underground station.
 + `LICENSE` - The license file for this project
 + `readme.md` - This file.
 + `WR2-uploader-WU.py` - A basic data collection application for this project. You'll run this application to collect data from the data stream, process it and upload to Weather Underground.
@@ -66,9 +66,9 @@ This puts the project files in the current folder's `WR2-uploader-WU` folder.
 
 ## Configuration
 
-To upload weather data to the Weather Underground service, the application requires access to the station ID and station access key you created earlier in this setup process. Open the project's `WUconfig.py` in your editor of choice and populate the `STATION_ID` and `STATION_KEY` fields with the appropriate values from your Weather Underground Weather Station:
+To upload weather data to the Weather Underground service, the application requires access to the station ID and station access key you created earlier in this setup process. Open the project's `wuconfig.py` in your editor of choice and populate the `STATION_ID` and `STATION_KEY` fields with the appropriate values from your Weather Underground Weather Station:
 
-``` c++
+``` python
 Config:
   # Weather Underground
   STATION_ID = ""
