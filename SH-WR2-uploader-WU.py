@@ -95,6 +95,8 @@ wu_station_id = ''
 wu_station_key = ''
 sense = None
 shMsg = ''
+failct = 0
+goodct = 0
 
 # Setup the basic console logger
 format_str = '%(asctime)s %(levelname)s %(message)s'
@@ -224,7 +226,7 @@ while True:
             logging.info('WeatherSense Indoor T/H F016TH Found' + '\n')
             logging.info('This is the raw data: ' + sLine + '\n')
             # Variable Processing from JSON output from Indoor T/H unit for WU upload
-            sys.stdout.write('Variable processing of Indoor T/H raw data. \n')
+            logging.info('Variable processing of Indoor T/H raw data. \n')
             raw_data = json.loads(sLine)
             indhumidity_str = "{0:.0f}".format(raw_data['humidity'])
             indtemp_str =  "{0:.1f}".format(raw_data['temperature_F'])
@@ -281,7 +283,7 @@ while True:
             uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
             light_str = "{0:.0f}".format(raw_data['light'])
             # Send the local data to the SenseHat
-            shMsg= temp_str +  "' " + " " + humidity_str + "%"
+            shMsg= temp_str +  " " + " " + humidity_str + "%"
             sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
             # clear the screen
             sense.clear()
@@ -321,11 +323,15 @@ while True:
             # display  green cross for success or a red arrow for fail
             if (r.status_code == 200):
                 sense.set_pixels(plus)
+		goodct += 1
                 time.sleep(2)
                 sense.clear()
+		logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
 		time.sleep(MEASUREMENT_INTERVAL)
             else:
                 sense.set_pixels(arrow_up)
+		failct += 1
+		logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
                 time.sleep(1)
                 sense.clear()
                 sense.set_pixels(arrow_up)
