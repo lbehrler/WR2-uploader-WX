@@ -21,7 +21,7 @@ except ImportError:
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # specifies how often to measure values from Weather Rack (in seconds)
-MEASUREMENT_INTERVAL = 180  # in seconds
+MEASUREMENT_INTERVAL = 60  # in seconds
 # Set to False when testing the code and/or hardware
 # Set to True to enable upload of weather data to Weather Underground
 WEATHER_UPLOAD = True

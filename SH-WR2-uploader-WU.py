@@ -327,8 +327,8 @@ while True:
                 time.sleep(2)
                 sense.clear()
 		logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
-		time.sleep(MEASUREMENT_INTERVAL)
-            else:
+        	time.sleep(MEASUREMENT_INTERVAL)
+	    else:
                 sense.set_pixels(arrow_up)
 		failct += 1
 		logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
@@ -338,5 +338,6 @@ while True:
                 time.sleep(1)
                 sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
                 sense.clear()
+		time.sleep(MEASUREMENT_INTERVAL)
 
     sys.stdout.flush()
