@@ -69,7 +69,7 @@ This puts the project files in the current folder's `WR2-uploader-WU` folder.
 To upload weather data to the Weather Underground service, the application requires access to the station ID and station access key you created earlier in this setup process. Open the project's `wuconfig.py` in your editor of choice and populate the `STATION_ID` and `STATION_KEY` fields with the appropriate values from your Weather Underground Weather Station:
 
 ``` python
-Config:
+class Config:
   # Weather Underground
   STATION_ID = ""
   STATION_KEY = ""
