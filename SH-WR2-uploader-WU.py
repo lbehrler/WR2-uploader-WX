@@ -30,7 +30,7 @@ except ImportError:
 
 DEBUG_MODE = True
 # specifies how often to measure values from the Sense HAT (in minutes)
-MEASUREMENT_INTERVAL = 5  # seconds
+MEASUREMENT_INTERVAL = 20  # seconds
 # Set to False when testing the code and/or hardware
 # Set to True to enable upload of weather data to Weather Underground
 WEATHER_UPLOAD = True
@@ -128,7 +128,7 @@ logging.debug('Station key: {}'.format(wu_station_key))
 
 # Rapid fire server
 WUurl = "https://rtupdate.wunderground.com/weatherstation/updateweatherstation.php?"
-action_str = "&realtime=1&rtfreq=15"
+action_str = "&realtime=1&rtfreq=20"
 
 WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 date_str = "&dateutc=now"
@@ -218,7 +218,7 @@ while True:
     else: # got line
         pulse -= 1
         sLine = line.decode()
-        print(sLine)
+        #print(sLine)
         #   See if the data is something we need to act on...
         if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)):
             logging.info('WeatherSense Indoor T/H F016TH Found' + '\n')
@@ -299,7 +299,7 @@ while True:
                 "&dailyrainin=" + cumrain_str +
                 "&uv=" + uv_str +
                 "&baromin=" + baro_str +
-                "&softwaretype=" + "RaspberryPi" +
+                "&softwaretype=" + "Pi3-SH-WR2-Updater" +
                 action_str)
             # Show a copy of what you formed up and are uploading in HRF 
             logging.info(WUurl +
@@ -314,7 +314,7 @@ while True:
                 "&dailyrainin=" + cumrain_str +
                 "&uv=" + uv_str +
                 "&baromin=" + baro_str +
-                "&softwaretype=" + "RaspberryPi" +
+                "&softwaretype=" + "Pi3-SH-WR2-Updater" +
                 action_str)
             # Check WU Feed Status
             print("Received " + str(r.status_code) + " " + str(r.text))
@@ -323,6 +323,7 @@ while True:
                 sense.set_pixels(plus)
                 time.sleep(2)
                 sense.clear()
+		time.sleep(MEASUREMENT_INTERVAL)
             else:
                 sense.set_pixels(arrow_up)
                 time.sleep(1)
@@ -331,6 +332,5 @@ while True:
                 time.sleep(1)
                 sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
                 sense.clear()
-            time.sleep(MEASUREMENT_INTERVAL) #pause for a few seconds
 
     sys.stdout.flush()
