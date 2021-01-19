@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Weather Underground Upload Script for WeatherSense SwitchDoc Labs Weather in combination with the SenseHat Sensors
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -14,6 +15,7 @@ import datetime
 import time
 import logging
 import math
+import urllib
 
 from sense_hat import SenseHat
 
@@ -30,7 +32,7 @@ except ImportError:
 
 DEBUG_MODE = True
 # specifies how often to measure values from the Sense HAT (in minutes)
-MEASUREMENT_INTERVAL = 20  # seconds
+MEASUREMENT_INTERVAL = 10  # seconds
 # Set to False when testing the code and/or hardware
 # Set to True to enable upload of weather data to Weather Underground
 WEATHER_UPLOAD = True
@@ -177,6 +179,7 @@ ON_POSIX = 'posix' in sys.builtin_module_names
 def enqueue_output(src, out, queue):
     for line in iter(out.readline, b''):
         queue.put(( src, line))
+	logging.info('Queue Size {}'.format(queue.qsize()))
     out.close()
 
 def get_dew_point_c(t_air_c, rel_humidity):
@@ -210,7 +213,7 @@ t.start()
 pulse = 0
 while True:
     #   Other processing can occur here as needed...
-    #sys.stdout.write('Made it to processing step. \n')
+    logging.info('Made it to processing step. \n')
 
     try:
         src, line = q.get(timeout = 1)
@@ -224,7 +227,7 @@ while True:
         #   See if the data is something we need to act on...
         if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)):
             logging.info('WeatherSense Indoor T/H F016TH Found' + '\n')
-            logging.info('This is the raw data: ' + sLine + '\n')
+            logging.info('raw data: ' + sLine + '\n')
             # Variable Processing from JSON output from Indoor T/H unit for WU upload
             logging.info('Variable processing of Indoor T/H raw data. \n')
             raw_data = json.loads(sLine)
@@ -260,13 +263,17 @@ while True:
             sense.clear()
         if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
             logging.info("WeatherSense WeatherRack2 FT020T found' + '\n")
-            logging.info('This is the raw data: ' + sLine + '\n')
-            # Variable Processing from SH unit for WU upload
+            logging.info('raw data: ' + sLine + '\n')
+	    # Variable Processing from SH unit for WU upload
             logging.info('Variable processing of SH raw data. \n')
             baro_str = "{0:.2f}".format (sense.get_pressure() * 0.0295300)
             # Variable Processing from JSON output from WR2 unit for WU upload
             logging.info('Variable processing of WR2 raw data. \n')
             raw_data = json.loads(sLine)
+	    time_str = urllib.quote_plus(raw_data['time'])
+	    #time_str = float(local_datetime.strftime(raw_data['time']))
+
+	    #print(time_str)
             humidity_str = "{0:.0f}".format(raw_data['humidity'])
             humpct = (raw_data['humidity'])
             tempf = ((raw_data['temperature']-400)/10.0)
@@ -291,8 +298,9 @@ while True:
             r= requests.get(
                 WUurl +
                 WUcreds +
+                #"&dateutc=" + time_str +
                 date_str +
-                "&tempf=" + temp_str +
+		"&tempf=" + temp_str +
                 "&humidity=" + humidity_str +
                 "&dewptf=" + dewpt_str +
                 "&winddir=" + winddir_str  +
@@ -306,7 +314,7 @@ while True:
             # Show a copy of what you formed up and are uploading in HRF 
             logging.info(WUurl +
                 WUcreds +
-                date_str +
+                "&dateutc=" + time_str +
                 "&tempf=" + temp_str +
                 "&humidity=" + humidity_str +
                 "&dewptf=" + dewpt_str +
@@ -322,22 +330,22 @@ while True:
             print("Received " + str(r.status_code) + " " + str(r.text))
             # display  green cross for success or a red arrow for fail
             if (r.status_code == 200):
-                sense.set_pixels(plus)
+                #sense.set_pixels(plus)
+                #time.sleep(2)
+                #sense.clear()
 		goodct += 1
-                time.sleep(2)
-                sense.clear()
-		logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
-        	time.sleep(MEASUREMENT_INTERVAL)
+		logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct) + ' Pulse: {}'.format(pulse))
 	    else:
-                sense.set_pixels(arrow_up)
+                #sense.set_pixels(arrow_up)
 		failct += 1
-		logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
-                time.sleep(1)
-                sense.clear()
-                sense.set_pixels(arrow_up)
-                time.sleep(1)
-                sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
-                sense.clear()
-		time.sleep(MEASUREMENT_INTERVAL)
-
+		logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct) + ' Pulse: {}'.format(pulse))
+                #time.sleep(1)
+                #sense.clear()
+                #sense.set_pixels(arrow_up)
+                #time.sleep(1)
+                #sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
+                #sense.clear()
+    logging.info('@Interval Pulse Count: {}'.format(pulse))
+    #logging.info('Queue Size: {}'.format(queue.qsize()))
+    #time.sleep(MEASUREMENT_INTERVAL)
     sys.stdout.flush()
