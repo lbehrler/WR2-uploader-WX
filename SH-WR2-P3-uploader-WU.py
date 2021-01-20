@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Weather Underground Upload Script for WeatherSense SwitchDoc Labs Weather in combination with the SenseHat Sensors
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Adapted from Switch Doc Labs readWeatherSensors.py script for testing the WeatherRack2
@@ -135,7 +134,7 @@ logging.debug('Station key: {}'.format(wu_station_key))
 
 # Rapid fire server
 WUurl = "https://rtupdate.wunderground.com/weatherstation/updateweatherstation.php?"
-action_str = "&realtime=1&rtfreq=20"
+action_str = "&realtime=1&rtfreq=16"
 
 WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 date_str = "&dateutc=now"
@@ -252,31 +251,26 @@ while True:
             # Variable Processing from JSON output from WR2 unit for WU upload
             logging.info('Variable processing of WR2 raw data. \n')
             raw_data = json.loads(sLine)
-
             time_stamp = (raw_data['time'])
-            # Convert Timezone to UTC
+
+            # Convert Timezone to UTC using timestamp from WR2
+            # Adjust values below to match your timezone etc
+            # If you are using date=now for your upload to WU comment out this section
             utc = timezone('UTC')
             central = timezone('US/Central')
             published_time = datetime.strptime(time_stamp, '%Y-%m-%d %H:%M:%S')
             published_cst = published_time.replace(tzinfo=central)
             published_gmt = published_time.astimezone(utc)
             actual_time_published = published_gmt.strftime('%Y-%m-%d %H:%M:%S')
-
-            #print(time_stamp)
-            #print(published_time)
-            #print(published_cst)
-            #print(actual_time_published)
-
+            # URL Encode timestamp 
             time_str = (urllib.parse.quote(actual_time_published, safe=''))
-
-            #print(time_str)
+            # Format process weather variables into strings for  upload
             humidity_str = "{0:.0f}".format(raw_data['humidity'])
             humpct = (raw_data['humidity'])
             tempf = ((raw_data['temperature']-400)/10.0)
             tempc = ((tempf-32.0)*5.0/9.0)
             temp_str =  "{0:.1f}".format((raw_data['temperature']-400.0)/10.0)
             # Dew Point Calcs
-            # dewptc  = ((tempc)-((100-raw_data['humidity'])/5))
             dewptc = get_dew_point_c(tempc, humpct)
             dewpt_str = "{0:.1f}".format((dewptc *9.0/5.0)+32.0)
             winddir_str = "{0:.0f}".format(raw_data['winddirection'])
@@ -285,7 +279,7 @@ while True:
             cumrain_str = "{0:.2f}".format(raw_data['cumulativerain'] * 0.003937)
             uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
             light_str = "{0:.0f}".format(raw_data['light'])
-            # Send the local data to the SenseHat
+            # Send the temp / humidity data to the SenseHat
             shMsg= temp_str +  "F " + " " + humidity_str + "%"
             sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
             # clear the screen
@@ -294,8 +288,8 @@ while True:
             r= requests.get(
                 WUurl +
                 WUcreds +
-                "&dateutc=" + time_str +
-                #date_str +
+                "&dateutc=" + time_str + #Formatted time stamp from WR2, comment line out to use "now" option for WU
+                #date_str +  #Use as a replacement for actual time stamp uncomment to use "now" function of WU 
 		"&tempf=" + temp_str +
                 "&humidity=" + humidity_str +
                 "&dewptf=" + dewpt_str +
@@ -327,22 +321,20 @@ while True:
             print("Received " + str(r.status_code) + " " + str(r.text))
             # display  green cross for success or a red arrow for fail
             if (r.status_code == 200):
-                #sense.set_pixels(plus)
-                #time.sleep(2)
-                #sense.clear()
+                sense.set_pixels(plus)
+                time.sleep(1)
+                sense.clear()
+                # increase good upload count
                 goodct += 1
-                logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct) + ' Pulse: {}'.format(pulse))
+                logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
             else:
-                #sense.set_pixels(arrow_up)
+                sense.set_pixels(arrow_up)
+                time.sleep(1)
+                sense.clear()
+                # increase fail upload count 
                 failct += 1
-                logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct) + ' Pulse: {}'.format(pulse))
-                #time.sleep(1)
-                #sense.clear()
-                #sense.set_pixels(arrow_up)
-                #time.sleep(1)
-                #sense.show_message(str(r.status_code), text_colour=[255, 0, 0], back_colour=[0, 0, 0])
-                #sense.clear()
-    logging.info('@Interval Pulse Count: {}'.format(pulse))
+                logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
+    #logging.info('@Interval Pulse Count: {}'.format(pulse))
     #logging.info('Queue Size: {}'.format(queue.qsize()))
-    #time.sleep(MEASUREMENT_INTERVAL)
-    sys.stdout.flush()
+    #time.sleep(MEASUREMENT_INTERVAL) #Uncomment to set an interval for uploads
+        sys.stdout.flush()
