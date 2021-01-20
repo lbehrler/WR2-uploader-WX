@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Weather Underground Upload Script for WeatherSense SwitchDoc Labs Weather in combination with the SenseHat Sensors
@@ -11,7 +10,10 @@ import requests
 from subprocess import PIPE, Popen, STDOUT
 from threading  import Thread
 import json
-import datetime
+import datetime as dt
+from datetime import datetime
+import pytz
+from pytz import timezone
 import time
 import logging
 import math
@@ -100,6 +102,7 @@ shMsg = ''
 failct = 0
 goodct = 0
 
+
 # Setup the basic console logger
 format_str = '%(asctime)s %(levelname)s %(message)s'
 date_format = '%Y-%m-%d %H:%M:%S'
@@ -179,7 +182,7 @@ ON_POSIX = 'posix' in sys.builtin_module_names
 def enqueue_output(src, out, queue):
     for line in iter(out.readline, b''):
         queue.put(( src, line))
-	logging.info('Queue Size {}'.format(queue.qsize()))
+        logging.info('Queue Size {}'.format(queue.qsize()))
     out.close()
 
 def get_dew_point_c(t_air_c, rel_humidity):
@@ -233,31 +236,10 @@ while True:
             raw_data = json.loads(sLine)
             indhumidity_str = "{0:.0f}".format(raw_data['humidity'])
             indtemp_str =  "{0:.1f}".format(raw_data['temperature_F'])
-            # Form URL into WU format and Send
-            #r= requests.get(
-            #    WUurl +
-            #    WUcreds +
-            #    date_str +
-            #    "&indoortempf=" + indtemp_str +
-            #    "&indoorhumidity=" + indhumidity_str +
-            #    "&softwaretype=" + "RaspberryPi" +
-            #    action_str)
-            # Show a copy of what you formed up and are uploading in HRF 
-            #print (WUurl +
-            #    WUcreds +
-            #    date_str +
-            #    "&indoortempf=" + indtemp_str +
-            #    "&indoorhumidity=" + indhumidity_str +
-            #    "&softwaretype=" + "RaspberryPi" +
-            #    action_str)
-            # Check WU Feed Status
-            #print("Received " + str(r.status_code) + " " + str(r.text))
-            # display a red, up arrow
-            #sense.set_pixels(arrow_up)
-            #time.sleep(1)
-            #sense.clear()
+            logging.info('Indoor Temp: ' + indtemp_str)
+            logging.info('Indoor Humidity: ' + indhumidity_str)
             # Send the local data to the SenseHat
-            shMsg= indtemp_str + "' " + " " + indhumidity_str + "%"
+            shMsg= indtemp_str + "F " + " " + indhumidity_str + "%"
             sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 51, 0])
             # clear the screen
             sense.clear()
@@ -270,10 +252,24 @@ while True:
             # Variable Processing from JSON output from WR2 unit for WU upload
             logging.info('Variable processing of WR2 raw data. \n')
             raw_data = json.loads(sLine)
-	    time_str = urllib.quote_plus(raw_data['time'])
-	    #time_str = float(local_datetime.strftime(raw_data['time']))
 
-	    #print(time_str)
+            time_stamp = (raw_data['time'])
+            # Convert Timezone to UTC
+            utc = timezone('UTC')
+            central = timezone('US/Central')
+            published_time = datetime.strptime(time_stamp, '%Y-%m-%d %H:%M:%S')
+            published_cst = published_time.replace(tzinfo=central)
+            published_gmt = published_time.astimezone(utc)
+            actual_time_published = published_gmt.strftime('%Y-%m-%d %H:%M:%S')
+
+            #print(time_stamp)
+            #print(published_time)
+            #print(published_cst)
+            #print(actual_time_published)
+
+            time_str = (urllib.parse.quote(actual_time_published, safe=''))
+
+            #print(time_str)
             humidity_str = "{0:.0f}".format(raw_data['humidity'])
             humpct = (raw_data['humidity'])
             tempf = ((raw_data['temperature']-400)/10.0)
@@ -290,7 +286,7 @@ while True:
             uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
             light_str = "{0:.0f}".format(raw_data['light'])
             # Send the local data to the SenseHat
-            shMsg= temp_str +  " " + " " + humidity_str + "%"
+            shMsg= temp_str +  "F " + " " + humidity_str + "%"
             sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
             # clear the screen
             sense.clear()
@@ -298,8 +294,8 @@ while True:
             r= requests.get(
                 WUurl +
                 WUcreds +
-                #"&dateutc=" + time_str +
-                date_str +
+                "&dateutc=" + time_str +
+                #date_str +
 		"&tempf=" + temp_str +
                 "&humidity=" + humidity_str +
                 "&dewptf=" + dewpt_str +
@@ -314,6 +310,7 @@ while True:
             # Show a copy of what you formed up and are uploading in HRF 
             logging.info(WUurl +
                 WUcreds +
+		#date_str+
                 "&dateutc=" + time_str +
                 "&tempf=" + temp_str +
                 "&humidity=" + humidity_str +
@@ -333,12 +330,12 @@ while True:
                 #sense.set_pixels(plus)
                 #time.sleep(2)
                 #sense.clear()
-		goodct += 1
-		logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct) + ' Pulse: {}'.format(pulse))
-	    else:
+                goodct += 1
+                logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct) + ' Pulse: {}'.format(pulse))
+            else:
                 #sense.set_pixels(arrow_up)
-		failct += 1
-		logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct) + ' Pulse: {}'.format(pulse))
+                failct += 1
+                logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct) + ' Pulse: {}'.format(pulse))
                 #time.sleep(1)
                 #sense.clear()
                 #sense.set_pixels(arrow_up)
