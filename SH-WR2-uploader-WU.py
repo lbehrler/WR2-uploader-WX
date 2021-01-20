@@ -1,5 +1,6 @@
 
-#!/usr/bin/env python3
+#!/usr/bin/env python
+#python 2.x compatable
 # -*- coding: utf-8 -*-
 # Weather Underground Upload Script for WeatherSense SwitchDoc Labs Weather in combination with the SenseHat Sensors
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------
