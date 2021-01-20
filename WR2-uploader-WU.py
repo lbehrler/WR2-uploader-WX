@@ -122,7 +122,7 @@ t.start()
 pulse = 0
 while True:
     #   Other processing can occur here as needed...
-    #sys.stdout.write('Made it to processing step. \n')
+    #sys.stdout.write('Looking for data \n')
 
     try:
         src, line = q.get(timeout = 1)
@@ -215,7 +215,6 @@ while True:
                 "&uv=" + uv_str +
                 "&softwaretype=" + "R-Pi-0W" +
                 action_str)
-
             # Check WU Feed Status
             print("Received " + str(r.status_code) + " " + str(r.text))
             time.sleep(MEASUREMENT_INTERVAL)
