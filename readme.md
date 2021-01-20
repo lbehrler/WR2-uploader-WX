@@ -32,7 +32,9 @@ The project folder contains several files and one folder:
 
 ## Hardware Assembly
 
-Assembly is easy - mount the Sense HAT on the Raspberry Pi then insert it in the case and plug it into power. All set! No wiring, soldering or anything else required.
+Assemble and mount the WeatherRack2 per the manufacturers instructions. Follow testing process published by SwitchDoc Labs.
+
+Raspberry pi assembly is easy - mount the Sense HAT on the Raspberry Pi then insert it in the case and plug it into power. All set! No wiring, soldering or anything else required.  Install the SDR antenna kit and any cases or mounts you may be using for your particular setup. 
 
 > NOTE: The Raspberry Pi foundation recommend you mount the "hat" boards to the Raspberry Pi using [standoffs](http://www.mouser.com/Electromechanical/Hardware/Standoffs-Spacers/_/N-aictf) 
 
@@ -53,16 +55,18 @@ Next, open a terminal window and execute the following command:
 ``` shell
 sudo apt install sense-hat
 ```
-
 This command installs the support packages for the Sense Hat.
 
-Assuming the terminal window is pointing to the Pi user's home folder, in open terminal window, execute the following command:
+Open a terminal window, execute the following commands:
 
 ``` shell
+cd ~
 git clone https://github.com/lbehrler/WR2-uploader-WU.git
 ```
 
-This puts the project files in the current folder's `WR2-uploader-WU` folder.
+This puts the project files in the Raspberry Pi's folder `WR2-uploader-WU`
+
+If you followed the testing instructions for the WeatherRack2 you should have the drivers for the Software Defined Radio in place and working. 
 
 ## Configuration
 
