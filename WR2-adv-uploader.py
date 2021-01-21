@@ -18,14 +18,15 @@ import logging
 import math
 import urllib
 
+
 from sense_hat import SenseHat
 
 from config import Config
 
-try:
-    from urllib import urlencode
-except ImportError:
-    from urllib.parse import urlencode
+#try:
+#    from urllib import urlencode
+#except ImportError:
+#    from urllib.parse import urlencode
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Constants
@@ -130,20 +131,22 @@ if (wu_station_id == "") or (wu_station_key == ""):
     sys.exit(1)
 
 #  Read PWSweather.com  Configuration
-logging.info('Initializing PWSweather.com configuration')
-pws_station_id = Config.PWS_STATION_ID
-pws_station_key = Config.PWS_STATION_KEY
-if (pws_station_id == "") or (pws_station_key == ""):
-    logging.error('Missing values from the PWS Weather configuration file')
-    sys.exit(1)
+if (Config.PWS_ENABLE == True): 
+    logging.info('Initializing PWSweather.com configuration')
+    pws_station_id = Config.PWS_STATION_ID
+    pws_station_key = Config.PWS_STATION_KEY
+    if (pws_station_id == "") or (pws_station_key == ""):
+        logging.error('Missing values from the PWS Weather configuration file')
+        sys.exit(1)
+    logging.info('Successfully read PWSweather configuration')
+    logging.info('PWS Station ID: {}'.format(pws_station_id))
+    logging.debug('Station key: {}'.format(pws_station_key))    
 
 # we made it this far, so it must have worked...
 logging.info('Successfully read Weather Underground configuration')
 logging.info('WU Station ID: {}'.format(wu_station_id))
 logging.debug('Station key: {}'.format(wu_station_key))
-logging.info('Successfully read PWSweather configuration')
-logging.info('PWS Station ID: {}'.format(pws_station_id))
-logging.debug('Station key: {}'.format(pws_station_key))
+
 
 date_str = "&dateutc=now"  #Default date stamp for weather services
 
@@ -168,25 +171,25 @@ PWSaction_str = "&action=updateraw"
 
 PWScreds = "ID=" + pws_station_id + "&PASSWORD="+ pws_station_key
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# initialize the Sense HAT object
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-try:
-    logging.info('Initializing the Sense HAT client')
-    sense = SenseHat()
-    sense.set_rotation(90)
-    # then write some text to the Sense HAT
-    sense.show_message('Power Up', text_colour=r, back_colour=[0, 0, 0])
-    # clear the screen
-    sense.clear()
-except:
-    logging.info('Unable to initialize the Sense HAT library')
-    logging.error('Exception type: {}'.format(type(e)))
-    logging.error('Error: {}'.format(sys.exc_info()[0]))
-    print (sys.stdout)
-    sys.exit(1)
-
-logging.info('Initialization complete!')
+while Config.SH_ENABLE == True:
+    # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # initialize the Sense HAT object
+    # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+    try:
+        logging.info('Initializing the Sense HAT client')
+        sense = SenseHat()
+        sense.set_rotation(90)
+        # then write some text to the Sense HAT
+        sense.show_message('Power Up', text_colour=r, back_colour=[0, 0, 0])
+        # clear the screen
+        sense.clear()
+    except:
+        logging.info('Unable to initialize the Sense HAT library')
+        logging.error('Exception type: {}'.format(type(e)))
+        logging.error('Error: {}'.format(sys.exc_info()[0]))
+        print (sys.stdout)
+        sys.exit(1)
+    logging.info('Initialization complete!')
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # 146 = FT-020T WeatherRack2, #147 = F016TH SDL Temperature/Humidity Sensor
@@ -228,6 +231,11 @@ def get_dew_point_c(t_air_c, rel_humidity):
     alpha = ((A * t_air_c) / (B + t_air_c)) + math.log(rel_humidity/100.0)
     return (B * alpha) / (A - alpha)
 
+def sh_plus():
+    sense.set_pixels(plus)
+    time.sleep(1)
+    sense.clear()
+
 #   Create our sub-process...
 #   Note that we need to either ignore output from STDERR or merge it with STDOUT due to a limitation/bug somewhere under the covers of "subprocess"
 #   > this took awhile to figure out a reliable approach for handling it...
@@ -266,17 +274,19 @@ while True:
             indtemp_str =  "{0:.1f}".format(raw_data['temperature_F'])
             logging.info('Indoor Temp: ' + indtemp_str)
             logging.info('Indoor Humidity: ' + indhumidity_str)
-            # Send the local data to the SenseHat
-            shMsg= indtemp_str + "F " + " " + indhumidity_str + "%"
-            sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 51, 0])
-            # clear the screen
-            sense.clear()
+            if (Config.SH_ENABLE == True):
+                # Send the local data to the SenseHat
+                shMsg= indtemp_str + "F " + " " + indhumidity_str + "%"
+                sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 51, 0])
+                # clear the screen
+                sense.clear()
         if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
             logging.info('WeatherSense WeatherRack2 FT020T found')
             logging.info('raw data: ' + sLine)
-	    # Variable Processing from SH unit for WU upload
-            logging.info('Variable processing of SH raw data.')
-            baro_str = "{0:.2f}".format (sense.get_pressure() * 0.0295300)
+            if (Config.SH_ENABLE == True):
+                # Variable Processing from SH unit for WU upload
+                logging.info('Variable processing of SH raw data.')
+                baro_str = "{0:.2f}".format (sense.get_pressure() * 0.0295300)
             # Variable Processing from JSON output from WR2 unit for WU upload
             logging.info('Variable processing of WR2 raw data.')
             raw_data = json.loads(sLine)
@@ -308,11 +318,12 @@ while True:
             cumrain_str = "{0:.2f}".format(raw_data['cumulativerain'] * 0.003937)
             uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
             light_str = "{0:.0f}".format(raw_data['light'])
-            # Send the temp / humidity data to the SenseHat
-            shMsg= temp_str +  "F " + " " + humidity_str + "%"
-            sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
-            # clear the screen
-            sense.clear()
+            if (Config.SH_ENABLE == True):
+                # Send the temp / humidity data to the SenseHat
+                shMsg= temp_str +  "F " + " " + humidity_str + "%"
+                sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
+                # clear the screen
+                sense.clear()
 
             # Form URL into WU format and Send
             wur= requests.get(
@@ -320,7 +331,7 @@ while True:
                 WUcreds +
                 "&dateutc=" + time_str + #Formatted time stamp from WR2, comment line out to use "now" option for WU
                 #date_str +  #Use as a replacement for actual time stamp uncomment to use "now" function of WU 
-		"&tempf=" + temp_str +
+                "&tempf=" + temp_str +
                 "&humidity=" + humidity_str +
                 "&dewptf=" + dewpt_str +
                 "&winddir=" + winddir_str  +
@@ -328,7 +339,7 @@ while True:
                 "&windgustmph=" + gustwind_str +
                 "&dailyrainin=" + cumrain_str +
                 "&uv=" + uv_str +
-                "&baromin=" + baro_str +
+                #"&baromin=" + baro_str +
                 "&softwaretype=" + "Pi3-SH-WR2-Updater" +
                 WUaction_str)
 
@@ -361,7 +372,7 @@ while True:
                         "&windgustmph=" + gustwind_str +
                         "&dailyrainin=" + cumrain_str +
                         "&uv=" + uv_str +
-                        "&baromin=" + baro_str +
+                        #"&baromin=" + baro_str +
                         "&softwaretype=" + "Pi3-SH-WR2-Updater" +
                         PWSaction_str)
                     # Check PWS Feed Status
@@ -380,7 +391,7 @@ while True:
             logging.info('Wind Speed Gust ' + gustwind_str)
             logging.info('Rain total ' + cumrain_str)
             logging.info('UV ' + uv_str)
-            logging.info('Barometer' +baro_str)
+            #logging.info('Barometer' +baro_str)
             logging.info('Software Pi3-SH-WR2-Updater')
             logging.info('WU Action ' + WUaction_str)
 
@@ -388,16 +399,15 @@ while True:
             logging.info('WU Received ' + str(wur.status_code) + ' ' + str(wur.text))
             # display  green cross for success or a red arrow for fail
             if (wur.status_code == 200):
-                sense.set_pixels(plus)
-                time.sleep(1)
-                sense.clear()
+                if (Config.SH_ENABLE == True):
+                    sh_plus()
                 # increase good upload count
                 goodct += 1
                 logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
             else:
-                sense.set_pixels(arrow_up)
-                time.sleep(1)
-                sense.clear()
+                #sense.set_pixels(arrow_up)
+                #time.sleep(1)
+                #sense.clear()
                 # increase fail upload count 
                 failct += 1
                 logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
