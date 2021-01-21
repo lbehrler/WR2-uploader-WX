@@ -33,7 +33,7 @@ except ImportError:
 
 DEBUG_MODE = True
 # specifies how often to measure values from the Sense HAT (in minutes)
-PWS_INTERVAL = 2  # minutes
+PWS_INTERVAL = 2  # set between 1 and 30 minutes to accomodate PWSweather.com upload requirements
 # Set to False when testing the code and/or hardware
 # Set to True to enable upload of weather data to Weather Underground
 WEATHER_UPLOAD = True
@@ -142,7 +142,7 @@ logging.info('Successfully read Weather Underground configuration')
 logging.info('WU Station ID: {}'.format(wu_station_id))
 logging.debug('Station key: {}'.format(wu_station_key))
 logging.info('Successfully read PWSweather configuration')
-logging.info('Station ID: {}'.format(pws_station_id))
+logging.info('PWS Station ID: {}'.format(pws_station_id))
 logging.debug('Station key: {}'.format(pws_station_key))
 
 date_str = "&dateutc=now"  #Default date stamp for weather services
@@ -210,7 +210,7 @@ ON_POSIX = 'posix' in sys.builtin_module_names
 def enqueue_output(src, out, queue):
     for line in iter(out.readline, b''):
         queue.put(( src, line))
-        logging.info('Queue Size {}'.format(queue.qsize()))
+        logging.debug('Queue Size {}'.format(queue.qsize()))
     out.close()
 
 def get_dew_point_c(t_air_c, rel_humidity):
@@ -244,7 +244,7 @@ t.start()
 pulse = 0
 while True:
     #   Other processing can occur here as needed...
-    logging.info('Looking for WR2 data')
+    logging.debug('Looking for WR2 data')
 
     try:
         src, line = q.get(timeout = 1)
@@ -332,7 +332,7 @@ while True:
                 "&softwaretype=" + "Pi3-SH-WR2-Updater" +
                 WUaction_str)
 
-            # Check upload time against interval
+            # Check upload time against interval to insure weather data is sent to PWSweather.com once every 1-30 minutes
             # get the current minute
             current_minute = dt.datetime.now().minute
             logging.info('Current minute: {}'.format(current_minute))
@@ -342,7 +342,7 @@ while True:
                 # reset last_minute to the current_minute
                 last_minute = current_minute
                 # is minute zero, or divisible by 10?
-                # we're only going to use measurements every MEASUREMENT_INTERVAL minutes
+                # we're only going to use measurements every PWS_INTERVAL minutes
                 if (current_minute == 0) or ((current_minute % PWS_INTERVAL) == 0):
                     # get the reading timestamp
                     now = dt.datetime.now()
