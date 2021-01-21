@@ -2,7 +2,7 @@
 
 > **Note:**: If you have an issue with this project, please review your hardware docuemntation first.  If you are still having an issue or have a software specific issue, please open an issue [here](https://github.com/lbehrler/WR2-uploader-WU/issues).
 
-This is a Raspberry Pi project that retrieves the weather data values (temperature, humidity, wind speed, ..., etc) in JSON format from the Weather Rack 2.  The data is manipulated to meet the [Weather Underground](www.weatherunderground.com); format for uploading of PWS data. I purchased a WeatherRack2 as my first weather station in 2020 and wrote this program to adapt the data feed for my use in both uploading to Weather Underground and in sending basic data to a display (in this case an AstoPi Sense Hat.  There is code included in the distribution to use a Sense Hat or to forgo the display and have a basic data processor and uploader. 
+This is a Raspberry Pi project that retrieves the weather data values (temperature, humidity, wind speed, ..., etc) in JSON format from the Weather Rack 2.  The data is manipulated to meet the [Weather Underground](www.weatherunderground.com); and PWSweather.com formats for uploading of PWS data. I purchased a WeatherRack2 as my first weather station in 2020 and wrote this program to adapt the data feed for my use in both uploading to Weather Underground and in sending basic data to a display (in this case an AstoPi Sense Hat.  There is code included in the distribution to use a Sense Hat or to forgo the display and have a basic data processor and uploader. 
 
 ## Acknowledgements
 Some of this code is adapted from Switch Doc Labs (https://github.com/switchdoclabs) readWeatherSensors.py script for testing the WeatherRack2 and from John Wargo's SH to WU script (https://github.com/johnwargo/pi_weather_station/blob/master/weather_station.py)
@@ -48,7 +48,7 @@ Download the Raspberry Pi software from [raspberrypi.org](https://www.raspberryp
 
 When setup completes, you must enable the I2C protocol for the Sense Hat to work correctly. Open the Raspberry menu, select **Preferences**, then **Raspberry Pi Configuration**. When the application opens, select the **Interfaces** tab, enable the I2C protocol and click the **OK** button to save your changes.
 
-![Raspberry Pi Configuration]
+[Raspberry Pi Configuration]
 
 Next, open a terminal window and execute the following command:
 
