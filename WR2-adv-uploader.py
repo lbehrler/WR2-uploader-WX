@@ -131,7 +131,7 @@ if (wu_station_id == "") or (wu_station_key == ""):
     sys.exit(1)
 
 #  Read PWSweather.com  Configuration
-if (Config.PWS_ENABLE == True): 
+if (Config.PWS_ENABLE == True):
     logging.info('Initializing PWSweather.com configuration')
     pws_station_id = Config.PWS_STATION_ID
     pws_station_key = Config.PWS_STATION_KEY
@@ -235,7 +235,12 @@ def sh_plus():
     sense.set_pixels(plus)
     time.sleep(1)
     sense.clear()
-
+    
+def sh_arrow():
+    sense.set_pixels(arrow_up)
+    time.sleep(1)
+    sense.clear()
+    
 #   Create our sub-process...
 #   Note that we need to either ignore output from STDERR or merge it with STDOUT due to a limitation/bug somewhere under the covers of "subprocess"
 #   > this took awhile to figure out a reliable approach for handling it...
@@ -391,7 +396,8 @@ while True:
             logging.info('Wind Speed Gust ' + gustwind_str)
             logging.info('Rain total ' + cumrain_str)
             logging.info('UV ' + uv_str)
-            #logging.info('Barometer' +baro_str)
+            logging.info('Light ' + light_str)
+            #logging.info('Barometer' + baro_str)
             logging.info('Software Pi3-SH-WR2-Updater')
             logging.info('WU Action ' + WUaction_str)
 
@@ -405,9 +411,8 @@ while True:
                 goodct += 1
                 logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
             else:
-                #sense.set_pixels(arrow_up)
-                #time.sleep(1)
-                #sense.clear()
+                if (Config.SH_ENABLE == True):
+                    sh_arrow()
                 # increase fail upload count 
                 failct += 1
                 logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
