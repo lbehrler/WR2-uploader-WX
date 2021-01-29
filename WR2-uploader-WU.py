@@ -2,6 +2,7 @@
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Adapted from Switch Doc Labs readWeatherSensors.py script for testing the WeatherRack2
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------
+# This version is being depreciated. 
 import sys
 import requests
 from subprocess import PIPE, Popen, STDOUT
