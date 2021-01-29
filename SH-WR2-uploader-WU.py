@@ -147,7 +147,6 @@ logging.debug('Station key: {}'.format(pws_station_key))
 
 date_str = "&dateutc=now"  #Default date stamp for weather services
 
-
 # Weather Underground URL formation --------
 # Create a string to hold the first part of the URL
 # Standard upload

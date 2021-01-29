@@ -122,6 +122,7 @@ PWScreds = "ID=" + pws_station_id + "&PASSWORD="+ pws_station_key
 
 #only run this if there is a Sense HAT
 if (Config.SH_ENABLE == True):
+    # Set Constants for Sense HAT
     # Initialize the Sense HAT object
     try:
         logging.info('Initializing the Sense HAT client')
@@ -138,7 +139,7 @@ if (Config.SH_ENABLE == True):
         print (sys.stdout)
         sys.exit(1)
     logging.info('Initialization complete!')
-    
+
     # constants used to display symbols on Sense HAT [up and down arrows plus bars]
     # modified from https://www.raspberrypi.org/learning/getting-started-with-the-sense-hat/worksheet/
     # set up the colours (blue, red, empty)
@@ -247,13 +248,12 @@ def sh_plus():
     sense.set_pixels(plus)
     time.sleep(1)
     sense.clear()
-    
+
 def sh_arrow():
     sense.set_pixels(arrow_up)
     time.sleep(1)
     sense.clear()
-    
-    
+
 #   Create our sub-process...
 #   Note that we need to either ignore output from STDERR or merge it with STDOUT due to a limitation/bug somewhere under the covers of "subprocess"
 #   > this took awhile to figure out a reliable approach for handling it...
@@ -381,7 +381,7 @@ while True:
                     now = dt.datetime.now()
                     logging.info("%d minute mark (%d @ %s)" % (PWS_INTERVAL, current_minute, str(now)))
                     # Form URL into PWS format and Send
-                    logging.info('Uploading data to PWS weather')               
+                    logging.info('Uploading data to PWS weather')
                     try:
                         upload_url = PWSurl + PWScreds +"&" + urlencode(weather_data) + PWSaction_str
                         logging.info('Raw URL',upload_url)
@@ -391,13 +391,13 @@ while True:
                         # best practice to close the file
                         response.close()
                     except:
-                        logging.info('Excepting PWS Weather upload') 
+                        logging.info('Excepting PWS Weather upload')
                         #logging.error('Exception type: {}'.format(type(e)))
                         logging.error('Error: {}'.format(sys.exc_info()[0]))
-                        #traceback.print_exc(file=sys.stdout) 
+                        #traceback.print_exc(file=sys.stdout)
                 else:
                     logging.info('Skipping PWSweather.com upload')
-                
+
                 # Show a copy of what you formed up and are uploading in HRF
                 logging.info('Time Stamp ' + time_str)
                 logging.info('Outdoor Temp ' + temp_str)
