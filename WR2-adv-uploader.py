@@ -123,23 +123,6 @@ PWScreds = "ID=" + pws_station_id + "&PASSWORD="+ pws_station_key
 #only run this if there is a Sense HAT
 if (Config.SH_ENABLE == True):
     # Set Constants for Sense HAT
-    # Initialize the Sense HAT object
-    try:
-        logging.info('Initializing the Sense HAT client')
-        sense = SenseHat()
-        sense.set_rotation(90)
-        # then write some text to the Sense HAT
-        sense.show_message('Power Up', text_colour=r, back_colour=[0, 0, 0])
-        # clear the screen
-        sense.clear()
-    except:
-        logging.info('Unable to initialize the Sense HAT library')
-        logging.error('Exception type: {}'.format(type(e)))
-        logging.error('Error: {}'.format(sys.exc_info()[0]))
-        print (sys.stdout)
-        sys.exit(1)
-    logging.info('Initialization complete!')
-
     # constants used to display symbols on Sense HAT [up and down arrows plus bars]
     # modified from https://www.raspberrypi.org/learning/getting-started-with-the-sense-hat/worksheet/
     # set up the colours (blue, red, empty)
@@ -188,6 +171,24 @@ if (Config.SH_ENABLE == True):
         e, e, e, g, g, e, e, e,
         e, e, e, g, g, e, e, e,
     ]
+    
+    # Initialize the Sense HAT object
+    try:
+        logging.info('Initializing the Sense HAT client')
+        sense = SenseHat()
+        sense.set_rotation(90)
+        # then write some text to the Sense HAT
+        sense.show_message('Power Up', text_colour=r, back_colour=[0, 0, 0])
+        # clear the screen
+        sense.clear()
+    except:
+        logging.info('Unable to initialize the Sense HAT library')
+        logging.error('Exception type: {}'.format(type(e)))
+        logging.error('Error: {}'.format(sys.exc_info()[0]))
+        print (sys.stdout)
+        sys.exit(1)
+    logging.info('Initialization complete!')
+
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Starting up wireless read from SDR 
