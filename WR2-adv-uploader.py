@@ -353,7 +353,7 @@ while True:
                     upload_url = WUurl + WUcreds +"&" + urlencode(weather_data) + WUaction_str
                     #logging.info('Raw URL',upload_url)
                     response = urllib.request.urlopen(upload_url)
-                    html = response.read()
+                    html = response.getcode()
                     logging.info('Server response: {}'.format(html))
                     # best practice to close the file
                     response.close()
@@ -386,7 +386,7 @@ while True:
                         upload_url = PWSurl + PWScreds +"&" + urlencode(weather_data) + PWSaction_str
                         logging.info('Raw URL',upload_url)
                         response = urllib.request.urlopen(upload_url)
-                        html = response.read()
+                        html = response.getcode()
                         logging.info('Server response: {}'.format(html))
                         # best practice to close the file
                         response.close()
