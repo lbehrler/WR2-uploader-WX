@@ -276,94 +276,94 @@ while True:
         #print(line.decode())
     except Empty:
         pulse += 1
-else: # got line
-    pulse -= 1
-    sLine = line.decode()
-    #print(sLine)
-    #   See if the data is something we need to act on...
-    if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)):
-        logging.info('WeatherSense Indoor T/H F016TH Found')
-        logging.info('raw data: ' + sLine)
-        # Variable Processing from JSON output from Indoor T/H unit for WU upload
-        logging.info('Variable processing of Indoor T/H raw data.')
-        raw_data = json.loads(sLine)
-        indhumidity_str = "{0:.0f}".format(raw_data['humidity'])
-        indtemp_str =  "{0:.1f}".format(raw_data['temperature_F'])
-        logging.info('Indoor Temp: ' + indtemp_str)
-        logging.info('Indoor Humidity: ' + indhumidity_str)
-        if (Config.SH_ENABLE == True):
-            # Send the local data to the Sense HAT
-            shMsg= indtemp_str + "F " + " " + indhumidity_str + "%"
-            sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 51, 0])
-            # clear the screen
-            sense.clear()
-    if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
-        logging.info('WeatherSense WeatherRack2 FT020T found')
-        logging.info('raw data: ' + sLine)
-        if (Config.SH_ENABLE == True):
-            # Variable Processing from SH unit for WU upload
-            logging.info('Variable processing of SH raw data.')
-            baro_str = "{0:.2f}".format (sense.get_pressure() * 0.0295300)
-        # Variable Processing from JSON output from WR2 unit for upload
-        logging.info('Variable processing of WR2 raw data.')
-        raw_data = json.loads(sLine)
-        #Convert local time in UTC 
-        time_str=timeUTC(raw_data['time'])
-        # Format process weather variables into strings for  upload
-        humidity_str = "{0:.0f}".format(raw_data['humidity'])
-        humpct = (raw_data['humidity'])
-        tempf = ((raw_data['temperature']-400)/10.0)
-        tempc = ((tempf-32.0)*5.0/9.0)
-        temp_str =  "{0:.1f}".format((raw_data['temperature']-400.0)/10.0)
-        # Dew Point Calcs
-        dewptc = get_dew_point_c(tempc, humpct)
-        dewpt_str = "{0:.1f}".format((dewptc *9.0/5.0)+32.0)
-        winddir_str = "{0:.0f}".format(raw_data['winddirection'])
-        avewind_str = "{0:.2f}".format(raw_data['avewindspeed'] * 0.2237)
-        gustwind_str = "{0:.2f}".format(raw_data['gustwindspeed'] * 0.2237)
-        cumrain_str = "{0:.2f}".format(raw_data['cumulativerain'] * 0.003937)
-        uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
-        light_str = "{0:.0f}".format(raw_data['light'])
-        if (Config.SH_ENABLE == True):
-            # Send the temp / humidity data to the Sense HAT
-            shMsg= temp_str +  "F " + " " + humidity_str + "%"
-            sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
-            # clear the screen
-            sense.clear()
-        #build weather packet for sending
-        weather_data = {
-            'dateutc': time_str,
-            #'dateutc':"now",
-            'tempf': temp_str,
-            'humidity': humidity_str,
-            'dewptf': dewpt_str,
-            'winddir': winddir_str,
-            'windspeedmph': avewind_str,
-            'windgustmph': gustwind_str,
-            'dailyrainin': cumrain_str,
-            'uv': uv_str,
-            #'baromin': baro_str,
-            'softwaretype':str("WR2-Advanced-Updater"),
-                }
-        # Form URL into WU format and Send
-        if (Config.WU_ENABLE == True):
-            # From http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
-            logging.info('Uploading data to Weather Underground')               
-            try:
-                upload_url = WUurl + WUcreds +"&" + urlencode(weather_data) + WUaction_str
-                logging.info('Raw URL',upload_url)
-                response = urllib.request.urlopen(upload_url)
-                html = response.read()
-                logging.info('Server response: {}'.format(html))
-                # best practice to close the file
-                response.close()
-            except:
-                logging.info('Excepting Weather Underground upload') 
-                #logging.error('Exception type: {}'.format(type(e)))
-                logging.error('Error: {}'.format(sys.exc_info()[0]))
-                #traceback.print_exc(file=sys.stdout)
-        else:
-            logging.info('Elsing Skipping Weather Underground upload') 
+    else: # got line
+        pulse -= 1
+        sLine = line.decode()
+        #print(sLine)
+        #   See if the data is something we need to act on...
+        if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)):
+            logging.info('WeatherSense Indoor T/H F016TH Found')
+            logging.info('raw data: ' + sLine)
+            # Variable Processing from JSON output from Indoor T/H unit for WU upload
+            logging.info('Variable processing of Indoor T/H raw data.')
+            raw_data = json.loads(sLine)
+            indhumidity_str = "{0:.0f}".format(raw_data['humidity'])
+            indtemp_str =  "{0:.1f}".format(raw_data['temperature_F'])
+            logging.info('Indoor Temp: ' + indtemp_str)
+            logging.info('Indoor Humidity: ' + indhumidity_str)
+            if (Config.SH_ENABLE == True):
+                # Send the local data to the Sense HAT
+                shMsg= indtemp_str + "F " + " " + indhumidity_str + "%"
+                sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 51, 0])
+                # clear the screen
+                sense.clear()
+        if (( sLine.find('FT0300') != -1) or ( sLine.find('FT020T') != -1)):
+            logging.info('WeatherSense WeatherRack2 FT020T found')
+            logging.info('raw data: ' + sLine)
+            if (Config.SH_ENABLE == True):
+                # Variable Processing from SH unit for WU upload
+                logging.info('Variable processing of SH raw data.')
+                baro_str = "{0:.2f}".format (sense.get_pressure() * 0.0295300)
+            # Variable Processing from JSON output from WR2 unit for upload
+            logging.info('Variable processing of WR2 raw data.')
+            raw_data = json.loads(sLine)
+            #Convert local time in UTC 
+            time_str=timeUTC(raw_data['time'])
+            # Format process weather variables into strings for  upload
+            humidity_str = "{0:.0f}".format(raw_data['humidity'])
+            humpct = (raw_data['humidity'])
+            tempf = ((raw_data['temperature']-400)/10.0)
+            tempc = ((tempf-32.0)*5.0/9.0)
+            temp_str =  "{0:.1f}".format((raw_data['temperature']-400.0)/10.0)
+            # Dew Point Calcs
+            dewptc = get_dew_point_c(tempc, humpct)
+            dewpt_str = "{0:.1f}".format((dewptc *9.0/5.0)+32.0)
+            winddir_str = "{0:.0f}".format(raw_data['winddirection'])
+            avewind_str = "{0:.2f}".format(raw_data['avewindspeed'] * 0.2237)
+            gustwind_str = "{0:.2f}".format(raw_data['gustwindspeed'] * 0.2237)
+            cumrain_str = "{0:.2f}".format(raw_data['cumulativerain'] * 0.003937)
+            uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
+            light_str = "{0:.0f}".format(raw_data['light'])
+            if (Config.SH_ENABLE == True):
+                # Send the temp / humidity data to the Sense HAT
+                shMsg= temp_str +  "F " + " " + humidity_str + "%"
+                sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
+                # clear the screen
+                sense.clear()
+            #build weather packet for sending
+            weather_data = {
+                'dateutc': time_str,
+               #'dateutc':"now",
+                'tempf': temp_str,
+                'humidity': humidity_str,
+                'dewptf': dewpt_str,
+                'winddir': winddir_str,
+                'windspeedmph': avewind_str,
+                'windgustmph': gustwind_str,
+                'dailyrainin': cumrain_str,
+                'uv': uv_str,
+                #'baromin': baro_str,
+                'softwaretype':str("WR2-Advanced-Updater"),
+                    }
+            # Form URL into WU format and Send
+            if (Config.WU_ENABLE == True):
+                # From http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
+                logging.info('Uploading data to Weather Underground')               
+                try:
+                    upload_url = WUurl + WUcreds +"&" + urlencode(weather_data) + WUaction_str
+                    #logging.info('Raw URL',upload_url)
+                    response = urllib.request.urlopen(upload_url)
+                    html = response.read()
+                    logging.info('Server response: {}'.format(html))
+                    # best practice to close the file
+                    response.close()
+                except:
+                    logging.info('Excepting Weather Underground upload') 
+                    #logging.error('Exception type: {}'.format(type(e)))
+                    logging.error('Error: {}'.format(sys.exc_info()[0]))
+                    #traceback.print_exc(file=sys.stdout)
+            else:
+                logging.info('Elsing Skipping Weather Underground upload') 
             # PWS weather upload 
             # Check upload time against interval to insure weather data is sent to PWSweather.com once every 1-30 minutes
             # get the current minute
@@ -391,26 +391,26 @@ else: # got line
                         # best practice to close the file
                         response.close()
                     except:
-                        logging.info('Excepting Weather Underground upload') 
+                        logging.info('Excepting PWS Weather upload') 
                         #logging.error('Exception type: {}'.format(type(e)))
                         logging.error('Error: {}'.format(sys.exc_info()[0]))
                         #traceback.print_exc(file=sys.stdout) 
                 else:
-                    logging.info('Skipping PWSweather.com upload-------------------------------------')
+                    logging.info('Skipping PWSweather.com upload')
                 
-            # Show a copy of what you formed up and are uploading in HRF
-            logging.info('Time Stamp ' + time_str)
-            logging.info('Outdoor Temp ' + temp_str)
-            logging.info('Humidity ' + humidity_str)
-            logging.info('Dew Point ' + dewpt_str)
-            logging.info('Wind Direction ' + winddir_str)
-            logging.info('Wind Speed Ave ' + avewind_str)
-            logging.info('Wind Speed Gust ' + gustwind_str)
-            logging.info('Rain total ' + cumrain_str)
-            logging.info('UV ' + uv_str)
-            logging.info('Light ' + light_str)
-            #logging.info('Barometer' + baro_str)
-            logging.info('Software WR2-Advanced-Updater')
+                # Show a copy of what you formed up and are uploading in HRF
+                logging.info('Time Stamp ' + time_str)
+                logging.info('Outdoor Temp ' + temp_str)
+                logging.info('Humidity ' + humidity_str)
+                logging.info('Dew Point ' + dewpt_str)
+                logging.info('Wind Direction ' + winddir_str)
+                logging.info('Wind Speed Ave ' + avewind_str)
+                logging.info('Wind Speed Gust ' + gustwind_str)
+                logging.info('Rain total ' + cumrain_str)
+                logging.info('UV ' + uv_str)
+                logging.info('Light ' + light_str)
+                #logging.info('Barometer' + baro_str)
+                logging.info('Software WR2-Advanced-Updater')
             """            
             # Check WU Feed Status
             logging.info('WU Received ' + str(wur.status_code) + ' ' + str(wur.text))
