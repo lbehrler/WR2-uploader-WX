@@ -343,7 +343,7 @@ while True:
                 'windgustmph': gustwind_str,
                 'dailyrainin': cumrain_str,
                 'uv': uv_str,
-                #'baromin': baro_str,
+                'baromin': baro_str,
                 'softwaretype':str("WR2-Advanced-Updater"),
                     }
             # Form URL into WU format and Send
@@ -410,7 +410,7 @@ while True:
                 logging.info('Rain total ' + cumrain_str)
                 logging.info('UV ' + uv_str)
                 logging.info('Light ' + light_str)
-                #logging.info('Barometer' + baro_str)
+                logging.info('Barometer' + baro_str)
                 logging.info('Software WR2-Advanced-Updater')
             """            
             # Check WU Feed Status
