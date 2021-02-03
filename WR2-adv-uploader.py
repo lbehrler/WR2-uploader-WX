@@ -29,6 +29,12 @@ try:
 except ImportError:
     from urllib.parse import urlencode
 
+if (Config.BMP180_ENABLE == True):
+    from Adafruit_BMP085 import BMP085
+    # Initialise the BMP085 and use STANDARD mode (default value)
+    bmp = BMP085(0x77)
+
+
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Intialize constants
 
@@ -69,7 +75,7 @@ logging.basicConfig(format=format_str, level=logging.INFO, datefmt=date_format)
 # logger.setLevel(logging.DEBUG)
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
-# URL Formation and WU/PWS initialization 
+# URL Formation and WU/PWS initialization
 
 #  Read Weather Underground Configuration from config file
 if (Config.WU_ENABLE == True):
@@ -171,7 +177,7 @@ if (Config.SH_ENABLE == True):
         e, e, e, g, g, e, e, e,
         e, e, e, g, g, e, e, e,
     ]
-    
+
     # Initialize the Sense HAT object
     try:
         logging.info('Initializing the Sense HAT client')
@@ -187,7 +193,8 @@ if (Config.SH_ENABLE == True):
         logging.error('Error: {}'.format(sys.exc_info()[0]))
         print (sys.stdout)
         sys.exit(1)
-    logging.info('Initialization complete!')
+
+logging.info('Initialization complete!')
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -302,9 +309,14 @@ while True:
             logging.info('WeatherSense WeatherRack2 FT020T found')
             logging.info('raw data: ' + sLine)
             if (Config.SH_ENABLE == True):
-                # Variable Processing from SH unit for WU upload
+                # Variable Processing from SH unit for upload
                 logging.info('Variable processing of SH raw data.')
                 baro_str = "{0:.2f}".format (sense.get_pressure() * 0.0295300)
+            if (Config.BMP180_ENABLE == True):
+                # Variable Processing for BMP180 unit for upload
+                logging.info('Variable processing of BMP180 raw data.')
+                logging.info('Barometer hPa' + str(bmp.readPressure()/100))
+                baro_str = "{0:.2f}".format (bmp.readPressure() / 100 * 0.0295300) 
             # Variable Processing from JSON output from WR2 unit for upload
             logging.info('Variable processing of WR2 raw data.')
             raw_data = json.loads(sLine)
@@ -349,7 +361,7 @@ while True:
             # Form URL into WU format and Send
             if (Config.WU_ENABLE == True):
                 # From http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
-                logging.info('Uploading data to Weather Underground')               
+                logging.info('Uploading data to Weather Underground')
                 try:
                     upload_url = WUurl + WUcreds +"&" + urlencode(weather_data) + WUaction_str
                     #logging.info('Raw URL',upload_url)
@@ -410,9 +422,9 @@ while True:
                 logging.info('Rain total ' + cumrain_str)
                 logging.info('UV ' + uv_str)
                 logging.info('Light ' + light_str)
-                logging.info('Barometer' + baro_str)
+                logging.info('Barometer ' + baro_str)
                 logging.info('Software WR2-Advanced-Updater')
-            """            
+            """
             # Check WU Feed Status
             logging.info('WU Received ' + str(wur.status_code) + ' ' + str(wur.text))
             # display  green cross for success or a red arrow for fail
