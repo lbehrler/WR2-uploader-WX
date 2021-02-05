@@ -1,8 +1,9 @@
-#!/usr/bin/env python3
-# Weather Underground and PWS Weather Advanced Upload Script for WeatherSense SwitchDoc Labs Weather in combination with the Sense HAT Sensors
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Adapted from Switch Doc Labs readWeatherSensors.py script for testing the WeatherRack2
-# Adapted from John Wargo SH to WU script https://github.com/johnwargo/pi_weather_station/blob/master/weather_station.py
+#!/usr/bin/env python3 Weather Underground and PWS Weather Advanced Upload Script for WeatherSense 
+# SwitchDoc Labs Weather in combination with the Sense HAT Sensors 
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+# Adapted from Switch Doc Labs readWeatherSensors.py script for testing the WeatherRack2 Adapted from 
+# John Wargo SH to WU script 
+# https://github.com/johnwargo/pi_weather_station/blob/master/weather_station.py 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------
 import sys
 #import requests
@@ -54,17 +55,14 @@ pws_station_id = ''
 pws_station_key = ''
 sense = None
 shMsg = ''
+base_rain = 0
+
+# to dump rain gauge on a startup mark this as True
+dumper = True
+
 # initialize the pass / fail upload counter for services
 failct = 0
 goodct = 0
-
-# initialize the lastMinute variable to the current time to start
-last_minute = dt.datetime.now().minute
-# on init, just use the previous minute as lastMinute
-last_minute -= 1
-if last_minute == 0:
-    last_minute = 59
-    logging.debug('Last Minute: {}'.format(last_minute))
 
 # Setup the basic console logger
 format_str = '%(asctime)s %(levelname)s %(message)s'
@@ -74,8 +72,23 @@ logging.basicConfig(format=format_str, level=logging.INFO, datefmt=date_format)
 # logger = logging.getLogger()
 # logger.setLevel(logging.DEBUG)
 
-# -------------------------------------------------------------------------------------------------------------------------------------------------------------
+# initialize the lastMinute variable to the current time to start
+last_minute = dt.datetime.now().minute
+last_hour = dt.datetime.now().hour
+
+# on init, just use the previous minute as lastMinute
+last_minute -= 1
+if last_minute == 0:
+    last_minute = 59
+    logging.debug('Last Minute: {}'.format(last_minute))
+
+# on init, use previos day as last_day
+last_hour -= 1
+logging.info('Last Hour: {}'.format(last_hour))
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------
 # URL Formation and WU/PWS initialization
+logging.info('Starting Init')
 
 #  Read Weather Underground Configuration from config file
 if (Config.WU_ENABLE == True):
@@ -320,7 +333,7 @@ while True:
             # Variable Processing from JSON output from WR2 unit for upload
             logging.info('Variable processing of WR2 raw data.')
             raw_data = json.loads(sLine)
-            #Convert local time in UTC 
+            #Convert local time in UTC
             time_str=timeUTC(raw_data['time'])
             # Format process weather variables into strings for  upload
             humidity_str = "{0:.0f}".format(raw_data['humidity'])
@@ -334,6 +347,34 @@ while True:
             winddir_str = "{0:.0f}".format(raw_data['winddirection'])
             avewind_str = "{0:.2f}".format(raw_data['avewindspeed'] * 0.2237)
             gustwind_str = "{0:.2f}".format(raw_data['gustwindspeed'] * 0.2237)
+            # Check rain gauge to see if it is the end of the day and time to dump it
+            # get the current minute and hour
+            current_minute = dt.datetime.now().minute
+            current_hour = dt.datetime.now().hour
+            logging.info('Current hour: {}'.format(current_hour))
+            logging.info('Last hour: {}'.format(last_hour))
+            # is it the same day as the last time we checked?
+            # this will always be true the first time through this loo
+            logging.info('Time for the LAST DAY check')
+            if current_hour != last_hour:
+                logging.info('Current hour: {}'.format(current_hour))
+                logging.info('Last hour: {}'.format(last_hour))
+                last_hour = current_hour
+                if (dumper == True):
+                    logging.info('First run, clearing the rain gauge +++++++++++++++')
+                    base_rain = (raw_data['cumulativerain'] * 0.003937)
+                    dumper == False
+                if ((current_minute == 0) and (current_hour == 0)):
+                    # get the reading timestamp
+                    now = dt.datetime.now()
+                    base_rain = (raw_data['cumulativerain'] * 0.003937)
+                    #logging.info("%d day mark (%j @ %s)" % (current_hour, str(now)))
+                    logging.info('DUMPING the rain gauge')
+                else:
+                    logging.info('Not time to dump the rain gauge')
+            logging.info('Base rain: {}'.format(base_rain))
+            day_rain = ((raw_data['cumulativerain'] * 0.003937) - base_rain)
+            dayrain_str = "{0:.2f}".format(day_rain)
             cumrain_str = "{0:.2f}".format(raw_data['cumulativerain'] * 0.003937)
             uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
             light_str = "{0:.0f}".format(raw_data['light'])
@@ -353,7 +394,7 @@ while True:
                 'winddir': winddir_str,
                 'windspeedmph': avewind_str,
                 'windgustmph': gustwind_str,
-                'dailyrainin': cumrain_str,
+                'dailyrainin': dayrain_str,
                 'uv': uv_str,
                 'baromin': baro_str,
                 'softwaretype':str("WR2-Advanced-Updater"),
@@ -361,7 +402,7 @@ while True:
             # Form URL into WU format and Send
             if (Config.WU_ENABLE == True):
                 # From http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
-                logging.info('Uploading data to Weather Underground')
+                logging.info('--------------Uploading data to Weather Underground')
                 try:
                     upload_url = WUurl + WUcreds +"&" + urlencode(weather_data) + WUaction_str
                     #logging.info('Raw URL',upload_url)
@@ -371,13 +412,13 @@ while True:
                     # best practice to close the file
                     response.close()
                 except:
-                    logging.info('Excepting Weather Underground upload') 
+                    logging.info('Excepting Weather Underground upload')
                     #logging.error('Exception type: {}'.format(type(e)))
                     logging.error('Error: {}'.format(sys.exc_info()[0]))
                     #traceback.print_exc(file=sys.stdout)
             else:
-                logging.info('Elsing Skipping Weather Underground upload') 
-            # PWS weather upload 
+                logging.info('Elsing Skipping Weather Underground upload')
+            # PWS weather upload
             # Check upload time against interval to insure weather data is sent to PWSweather.com once every 1-30 minutes
             # get the current minute
             current_minute = dt.datetime.now().minute
@@ -394,10 +435,10 @@ while True:
                     now = dt.datetime.now()
                     logging.info("%d minute mark (%d @ %s)" % (PWS_INTERVAL, current_minute, str(now)))
                     # Form URL into PWS format and Send
-                    logging.info('Uploading data to PWS weather')
+                    logging.info('++++++++++++++++++Uploading data to PWS weather')
                     try:
                         upload_url = PWSurl + PWScreds +"&" + urlencode(weather_data) + PWSaction_str
-                        logging.info('Raw URL',upload_url)
+                        #logging.info('Raw URL ' + upload_url)
                         response = urllib.request.urlopen(upload_url)
                         html = response.getcode()
                         logging.info('Server response: {}'.format(html))
