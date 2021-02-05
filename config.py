@@ -12,3 +12,6 @@ class Config:
   
   # Sense Hat
   SH_ENABLE = False
+
+  # BMP180
+  BMP180_ENABLE = True
