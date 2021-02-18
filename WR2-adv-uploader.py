@@ -349,29 +349,27 @@ while True:
             gustwind_str = "{0:.2f}".format(raw_data['gustwindspeed'] * 0.2237)
             # Check rain gauge to see if it is the end of the day and time to dump it
             # get the current minute and hour
+            now = dt.datetime.now()
             current_minute = dt.datetime.now().minute
             current_hour = dt.datetime.now().hour
+            dump_time = now.replace( hour=23, minute=59)
             logging.info('Current hour: {}'.format(current_hour))
             logging.info('Last hour: {}'.format(last_hour))
             # is it the same day as the last time we checked?
             # this will always be true the first time through this loo
-            logging.info('Time for the LAST DAY check')
-            if current_hour != last_hour:
-                logging.info('Current hour: {}'.format(current_hour))
-                logging.info('Last hour: {}'.format(last_hour))
-                last_hour = current_hour
-                if (dumper == True):
-                    logging.info('First run, clearing the rain gauge +++++++++++++++')
-                    base_rain = (raw_data['cumulativerain'] * 0.003937)
-                    dumper == False
-                if ((current_minute == 0) and (current_hour == 0)):
-                    # get the reading timestamp
-                    now = dt.datetime.now()
-                    base_rain = (raw_data['cumulativerain'] * 0.003937)
-                    #logging.info("%d day mark (%j @ %s)" % (current_hour, str(now)))
-                    logging.info('DUMPING the rain gauge')
-                else:
-                    logging.info('Not time to dump the rain gauge')
+            logging.info('Time for the end of day check')
+            if (dumper == True):
+                logging.info('First run, clearing the rain gauge +++++++++++++++')
+                base_rain = (raw_data['cumulativerain'] * 0.003937)
+                dumper = False
+            if (now  == dump_time):
+                # get the reading timestamp
+                now = dt.datetime.now()
+                base_rain = (raw_data['cumulativerain'] * 0.003937)
+                #logging.info("%d day mark (%j @ %s)" % (current_hour, str(now)))
+                logging.info('++++++++++++============DUMPING the rain gauge==========')
+            else:
+                logging.info('Not time to dump the rain gauge')
             logging.info('Base rain: {}'.format(base_rain))
             day_rain = ((raw_data['cumulativerain'] * 0.003937) - base_rain)
             dayrain_str = "{0:.2f}".format(day_rain)
