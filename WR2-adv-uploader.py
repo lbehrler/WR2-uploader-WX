@@ -6,7 +6,7 @@
 # https://github.com/johnwargo/pi_weather_station/blob/master/weather_station.py 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------
 import sys
-#import requests
+import requests
 from subprocess import PIPE, Popen, STDOUT
 from threading  import Thread
 import json
@@ -16,11 +16,13 @@ from datetime import datetime
 from pytz import timezone
 #import time
 import logging
-import traceback
+#import traceback
 import math
 import urllib
 import urllib.request
 from sense_hat import SenseHat
+import board
+import adafruit_bmp280
 
 from config import Config
 
@@ -30,12 +32,16 @@ try:
 except ImportError:
     from urllib.parse import urlencode
 
-if (Config.BMP180_ENABLE == True):
-    from Adafruit_BMP085 import BMP085
-    # Initialise the BMP085 and use STANDARD mode (default value)
-    bmp = BMP085(0x77)
-
-
+if (Config.BMP280_ENABLE == True):
+    i2c = board.I2C()
+    bmp280 = adafruit_bmp280.Adafruit_BMP280_I2C(i2c, address=0x76) #modified to change BMP280 I2C addrbar
+    # change this to match the location's pressure (hPa) at sea level
+    bmp280.sea_level_pressure = 1013.25
+    bmp280.mode = adafruit_bmp280.MODE_NORMAL
+    bmp280.standby_period = adafruit_bmp280.STANDBY_TC_500
+    bmp280.iir_filter = adafruit_bmp280.IIR_FILTER_X16
+    bmp280.overscan_pressure = adafruit_bmp280.OVERSCAN_X16
+    bmp280.overscan_temperature = adafruit_bmp280.OVERSCAN_X2
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Intialize constants
 
@@ -43,8 +49,6 @@ DEBUG_MODE = False
 # specifies how often to measure values from the Sense HAT (in minutes)
 PWS_INTERVAL = Config.PWS_INTERVAL  # set between 1 and 30 minutes to accomodate PWSweather.com upload requirements
 # Set to False when testing the code and/or hardware
-# Set to True to enable upload of weather data to Weather Underground
-WEATHER_UPLOAD = True
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Initialize global variables
@@ -87,7 +91,8 @@ last_hour -= 1
 logging.info('Last Hour: {}'.format(last_hour))
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------
-# URL Formation and WU/PWS initialization
+# Weather station base URL variable initialization
+
 logging.info('Starting Init')
 
 #  Read Weather Underground Configuration from config file
@@ -101,6 +106,18 @@ if (Config.WU_ENABLE == True):
     logging.info('Successfully read WU weather configuration')
     logging.info('WU Station ID: {}'.format(wu_station_id))
     logging.debug('Station key: {}'.format(wu_station_key))
+    # Weather Underground URL formation 
+    # Create a string to hold the first part of the URL
+    
+    # Standard upload
+    #WUurl = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?"
+    #WUaction_str = "&action=updateraw"
+
+    # Rapid fire server
+    WUurl = "https://rtupdate.wunderground.com/weatherstation/updateweatherstation.php?"
+    WUaction_str = "&realtime=1&rtfreq=16"
+
+    WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
 
 #  Read PWSweather.com Configuration from config file
 if (Config.PWS_ENABLE == True):
@@ -112,34 +129,48 @@ if (Config.PWS_ENABLE == True):
         sys.exit(1)
     logging.info('Successfully read PWSweather configuration')
     logging.info('PWS Station ID: {}'.format(pws_station_id))
-    logging.debug('Station key: {}'.format(pws_station_key))
+    logging.debug('PWS Station key: {}'.format(pws_station_key))
+    # PWS weather URL formation 
+    # Create a string to hold the first part of the URL
+    PWSurl = "https://pwsweather.com/weatherstation/updateweatherstation.php?"
+    PWSaction_str = "&action=updateraw"
 
-# initialize the date and time 
+    PWScreds = "ID=" + pws_station_id + "&PASSWORD="+ pws_station_key
+
+#  Read AQODP Configuration from config file
+if (Config.AQ_ENABLE == True):
+    logging.info('Initializing AQ ODP configuration')
+    if (Config.AQ_STATION_ID == "") or (Config.AQ_STATION_NAME == ""):
+        logging.error('Missing values from the AQI configuration')
+        sys.exit(1)
+    logging.info('Successfully read AQ ODP configuration')
+    logging.info('AQ Station ID: {}'.format(Config.AQ_STATION_ID))
+    logging.debug('AQ Station key: {}'.format(Config.AQ_STATION_NAME))
+    AQstation = {'id':Config.AQ_STATION_ID, 'name':Config.AQ_STATION_NAME, 'location':Config.LOCATION} 
+    AQurl = "https://aqicn.org/sensor/upload/"
+    
+    #Global AQ variables for WU as WU updates every 16 seconds AQ every 18 minutes
+    PM25S_str = ""
+    PM10S_str = ""
+    
+#  Read Windy.com Configuration from config file
+if (Config.WDY_ENABLE == True):
+    logging.info('Initializing Windy.com configuration')
+    if (Config.WDY_STATION_ID == "") or (Config.WDY_STATION_KEY == ""):
+        logging.error('Missing values from the Windy.com configuration')
+        sys.exit(1)
+    logging.info('Successfully read Windy.com configuration')
+    logging.info('WDY Station ID: {}'.format(Config.WDY_STATION_ID))
+    logging.debug('WDY Station key: {}'.format(Config.WDY_STATION_KEY))
+    WDYstation = {'id':Config.WDY_STATION_ID, 'name':Config.WDY_STATION_NAME, 'location':Config.LOCATION} 
+    WDYurl = "https://stations.windy.com/pws/update/"
+    WDYcreds = Config.WDY_STATION_KEY
+
+
+# Initialize the date and time 
 date_str = "&dateutc=now"  #Default date stamp for weather services
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Weather station base URL variable initialization
-
-# Weather Underground URL formation 
-# Create a string to hold the first part of the URL
-# Standard upload
-#WUurl = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?"
-#WUaction_str = "&action=updateraw"
-
-# Rapid fire server
-WUurl = "https://rtupdate.wunderground.com/weatherstation/updateweatherstation.php?"
-WUaction_str = "&realtime=1&rtfreq=16"
-
-WUcreds = "ID=" + wu_station_id + "&PASSWORD="+ wu_station_key
-
-# PWS weather URL formation 
-# Create a string to hold the first part of the URL
-PWSurl = "https://pwsweather.com/weatherstation/updateweatherstation.php?"
-PWSaction_str = "&action=updateraw"
-
-PWScreds = "ID=" + pws_station_id + "&PASSWORD="+ pws_station_key
-
-#only run this if there is a Sense HAT
+# Initialize the Sense HAT -- only run this if there is a Sense HAT
 if (Config.SH_ENABLE == True):
     # Set Constants for Sense HAT
     # constants used to display symbols on Sense HAT [up and down arrows plus bars]
@@ -216,7 +247,7 @@ logging.info('Initialization complete!')
 # 146 = FT-020T WeatherRack2, #147 = F016TH SDL Temperature/Humidity Sensor
 logging.info('Starting Wireless Read')
 #cmd = [ '/usr/local/bin/rtl_433', '-vv',  '-q', '-F', 'json', '-R', '146', '-R', '147']
-cmd = [ '/usr/local/bin/rtl_433', '-q', '-F', 'json', '-R', '146', '-R', '147']
+cmd = [ '/usr/local/bin/rtl_433', '-q', '-F', 'json', '-R', '146', '-R', '147', '-R', '150', '-R', '151']
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #   Functions 
@@ -289,9 +320,11 @@ t.start()
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 pulse = 0
+logging.info('Starting search for AQI and WR2 data')
+
 while True:
-    #   Other processing can occur here as needed...
-    #logging.info('Looking for WR2 data')
+    #Other processing can occur here as needed...
+    #logging.info('Looking for data in the loop')
     try:
         src, line = q.get(timeout = 1)
         #print(line.decode())
@@ -302,6 +335,41 @@ while True:
         sLine = line.decode()
         #print(sLine)
         #   See if the data is something we need to act on...
+        if (sLine.find('AQI') != -1):
+            logging.info('WeatherSense AQI found')
+            logging.info('raw data: ' + sLine) 
+            # Variable Processing from JSON output from AQI unit for upload
+            logging.info('Variable processing of AQI raw data.')
+            raw_data = json.loads(sLine)
+            #Convert local time in UTC
+            time_str=timeUTC(raw_data['time'])
+            # Format process weather variables into strings for  upload
+            PM1S_str = "{0:.0f}".format(raw_data['PM1.0S'])
+            PM25S_str =  "{0:.0f}".format(raw_data['PM2.5S'])
+            PM10S_str = "{0:.0f}".format(raw_data['PM10S'])
+            AQI_str = "{0:.0f}".format(raw_data['AQI'])
+            # JSONify data
+            sensorReadings = [
+                {'specie':'pm2.5', 'value':raw_data['PM2.5S']},
+                {'specie':'pm10', 'value':raw_data['PM10S']},
+                {'specie':'pm1.0', 'value':raw_data['PM1.0S']},
+                {'specie':'aqi', 'value':raw_data['AQI']}
+            ]
+            # build packet for sending
+            aq_data = {'station': AQstation, 'readings':sensorReadings,'token': Config.TOKEN}
+            # Form URL into WU format and Send
+            if (Config.AQ_ENABLE == True):
+                logging.info('>>>>>>>>>>>>>Uploading data to AQI ODP')
+                request = requests.post (AQurl, json = aq_data)
+                print(request.text)
+                data = request.json()
+                if data["status"]!="ok": 
+                    print("Something went wrong: %s" % data) 
+                else: 
+                    print("Data successfully posted: %s" % data) 
+            else:
+                logging.info('Elsing Skipping AQI upload')
+
         if (( sLine.find('F007TH') != -1) or ( sLine.find('F016TH') != -1)):
             logging.info('WeatherSense Indoor T/H F016TH Found')
             logging.info('raw data: ' + sLine)
@@ -325,11 +393,13 @@ while True:
                 # Variable Processing from SH unit for upload
                 logging.info('Variable processing of SH raw data.')
                 baro_str = "{0:.2f}".format (sense.get_pressure() * 0.0295300)
-            if (Config.BMP180_ENABLE == True):
+            if (Config.BMP280_ENABLE == True):
                 # Variable Processing for BMP180 unit for upload
-                logging.info('Variable processing of BMP180 raw data.')
-                logging.info('Barometer hPa' + str(bmp.readPressure()/100))
-                baro_str = "{0:.2f}".format (bmp.readPressure() / 100 * 0.0295300) 
+                logging.info('Variable processing of BMP280 raw data.')
+                logging.info('Barometer hPa ' + str(bmp280.pressure))
+                baro_str = "{0:.2f}".format (bmp280.pressure * 0.0295300)
+                barohpa_str = "{0:.2f}".format (bmp280.pressure) 
+
             # Variable Processing from JSON output from WR2 unit for upload
             logging.info('Variable processing of WR2 raw data.')
             raw_data = json.loads(sLine)
@@ -343,6 +413,7 @@ while True:
             temp_str =  "{0:.1f}".format((raw_data['temperature']-400.0)/10.0)
             # Dew Point Calcs
             dewptc = get_dew_point_c(tempc, humpct)
+            dewptc_str = "{0:.1f}".format(dewptc)
             dewpt_str = "{0:.1f}".format((dewptc *9.0/5.0)+32.0)
             winddir_str = "{0:.0f}".format(raw_data['winddirection'])
             avewind_str = "{0:.2f}".format(raw_data['avewindspeed'] * 0.2237)
@@ -372,6 +443,7 @@ while True:
                 logging.info('Not time to dump the rain gauge')
             logging.info('Base rain: {}'.format(base_rain))
             day_rain = ((raw_data['cumulativerain'] * 0.003937) - base_rain)
+            logging.info('Day rain: {}'.format(day_rain))
             dayrain_str = "{0:.2f}".format(day_rain)
             cumrain_str = "{0:.2f}".format(raw_data['cumulativerain'] * 0.003937)
             uv_str = "{0:.1f}".format(raw_data['uv'] * 0.1)
@@ -382,10 +454,11 @@ while True:
                 sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
                 # clear the screen
                 sense.clear()
-            #build weather packet for sending
+                
+            #build weather packet for sending to WU and PWS
             weather_data = {
                 'dateutc': time_str,
-               #'dateutc':"now",
+                #'dateutc':"now",
                 'tempf': temp_str,
                 'humidity': humidity_str,
                 'dewptf': dewpt_str,
@@ -394,9 +467,27 @@ while True:
                 'windgustmph': gustwind_str,
                 'dailyrainin': dayrain_str,
                 'uv': uv_str,
-                'baromin': baro_str,
+                'baromin': baro_str, # comment out if no barometer
+                'AqPM2.5': PM25S_str, # comment out if no AQI
+                'AqPM10': PM10S_str, # comment out if no AQI
                 'softwaretype':str("WR2-Advanced-Updater"),
                     }
+            
+            weather_data_wdy = {
+                #'station': Config.WDY_STATION_ID,
+                'dateutc': time_str,
+                #'dateutc':"now",
+                'tempf': temp_str,
+                'windspeedmph': avewind_str,                
+                'winddir': winddir_str,
+                'windgustmph': gustwind_str,
+                'humidity': humidity_str,
+                'dewpoint': dewptc_str,
+                'pressure': barohpa_str, # comment out if no barometer
+                'rainin': dayrain_str,
+                'uv': uv_str,
+                    }
+            
             # Form URL into WU format and Send
             if (Config.WU_ENABLE == True):
                 # From http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
@@ -405,7 +496,7 @@ while True:
                     upload_url = WUurl + WUcreds +"&" + urlencode(weather_data) + WUaction_str
                     #logging.info('Raw URL',upload_url)
                     response = urllib.request.urlopen(upload_url)
-                    html = response.getcode()
+                    html = response.status
                     logging.info('Server response: {}'.format(html))
                     # best practice to close the file
                     response.close()
@@ -415,8 +506,8 @@ while True:
                     logging.error('Error: {}'.format(sys.exc_info()[0]))
                     #traceback.print_exc(file=sys.stdout)
             else:
-                logging.info('Elsing Skipping Weather Underground upload')
-            # PWS weather upload
+                logging.info('Skipping Weather Underground upload')
+                
             # Check upload time against interval to insure weather data is sent to PWSweather.com once every 1-30 minutes
             # get the current minute
             current_minute = dt.datetime.now().minute
@@ -427,11 +518,13 @@ while True:
                 # reset last_minute to the current_minute
                 last_minute = current_minute
                 # is minute zero, or divisible by 10?
+                
+                # PWS weather upload
                 # we're only going to use measurements every PWS_INTERVAL minutes
-                if (Config.PWS_ENABLE == True and ((current_minute == 0) or ((current_minute % PWS_INTERVAL) == 0))):
+                if (Config.PWS_ENABLE == True and ((current_minute == 0) or ((current_minute % Config.PWS_INTERVAL) == 0))):
                     # get the reading timestamp
                     now = dt.datetime.now()
-                    logging.info("%d minute mark (%d @ %s)" % (PWS_INTERVAL, current_minute, str(now)))
+                    logging.info("%d minute mark (%d @ %s)" % (Config.PWS_INTERVAL, current_minute, str(now)))
                     # Form URL into PWS format and Send
                     logging.info('++++++++++++++++++Uploading data to PWS weather')
                     try:
@@ -449,6 +542,30 @@ while True:
                         #traceback.print_exc(file=sys.stdout)
                 else:
                     logging.info('Skipping PWSweather.com upload')
+                    
+                # WDY weather upload
+                # we're only going to use measurements every WDY_INTERVAL minutes
+                if (Config.WDY_ENABLE == True and ((current_minute == 0) or ((current_minute % Config.WDY_INTERVAL) == 0))):
+                    # get the reading timestamp
+                    now = dt.datetime.now()
+                    logging.info("%d minute mark (%d @ %s)" % (Config.WDY_INTERVAL, current_minute, str(now)))
+                    # Form URL into WDY format and Send
+                    logging.info('xxxxxxxxxxxxxxxxx-Uploading data to WDY weather')
+                    try:
+                        upload_url = WDYurl + WDYcreds +"?" + urlencode(weather_data_wdy)
+                        logging.info('Raw URL ' + upload_url)
+                        response = urllib.request.urlopen(upload_url)
+                        html = response.status
+                        logging.info('Server response: {}'.format(html))
+                        # best practice to close the file
+                        response.close()
+                    except:
+                        logging.info('Excepting Windy.com Weather upload')
+                        #logging.error('Exception type: {}'.format(type(e)))
+                        logging.error('Error: {}'.format(sys.exc_info()[0]))
+                        #traceback.print_exc(file=sys.stdout)
+                else:
+                    logging.info('Skipping Windy.com upload')
 
                 # Show a copy of what you formed up and are uploading in HRF
                 logging.info('Time Stamp ' + time_str)
@@ -459,9 +576,14 @@ while True:
                 logging.info('Wind Speed Ave ' + avewind_str)
                 logging.info('Wind Speed Gust ' + gustwind_str)
                 logging.info('Rain total ' + cumrain_str)
+                logging.info('Daily rain ' + dayrain_str)
                 logging.info('UV ' + uv_str)
                 logging.info('Light ' + light_str)
-                logging.info('Barometer ' + baro_str)
+                if (Config.baro == True):
+                    logging.info('Barometer ' + baro_str)
+                if (Config.AQ_ENABLE == True):
+                    logging.info('PM2.5 ' + PM25S_str)
+                    logging.info('PM10 ' + PM10S_str)
                 logging.info('Software WR2-Advanced-Updater')
             """
             # Check WU Feed Status
