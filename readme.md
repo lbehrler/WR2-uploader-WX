@@ -24,11 +24,10 @@ This project is quite easy to make.
 
 The project folder contains several files and one folder:
 
-+ `config.py` - This is the project's external service configuration file, it provides the weather station with details about your Weather Underground station.
++ `sample.config.py` - Rename to config.py, This is the project's external service configuration file, it provides the weather station with details about your weather station.
 + `LICENSE` - The license file for this project
 + `readme.md` - This file.
-+ `WR2-uploader-WU.py` - A basic data collection application for this project. You'll run this application to collect data from the data stream, process it and upload to Weather Underground.
-+ `SH-WR2-uploader-WU.py` - The main data collection application for this project, using both the Weather Rack 2 and the Sense Hat. You'll run this application to collect data from the data stream, display data (inside and outside) on the Sense Hat, and upload to Weather Underground.
++ `WR2-adv-uploader.py` - A basic data collection application for this project. You'll run this application to collect data from the data stream, process it and upload to Weather Underground, PWS and several other services.
 
 ## Hardware Assembly
 
