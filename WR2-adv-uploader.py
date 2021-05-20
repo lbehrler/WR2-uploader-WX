@@ -136,7 +136,6 @@ if (Config.PWS_ENABLE == True):
     # Create a string to hold the first part of the URL
     PWSurl = "https://pwsweather.com/weatherstation/updateweatherstation.php?"
     PWSaction_str = "&action=updateraw"
-
     PWScreds = "ID=" + pws_station_id + "&PASSWORD="+ pws_station_key
 
 #  Read AQODP Configuration from config file
@@ -184,8 +183,8 @@ if (Config.MQTT_ENABLE == True):
     client_id = f'python-mqtt-{random.randint(0,1000)}'
  #   username = 'mqtt'
  #   password = 'mqttpass'
-    
-# Initialize the date and time 
+
+# Initialize the date and time
 date_str = "&dateutc=now"  #Default date stamp for weather services
 
 # Initialize the Sense HAT -- only run this if there is a Sense HAT
@@ -654,21 +653,4 @@ while True:
                     logging.info('PM2.5 ' + PM25S_str)
                     logging.info('PM10 ' + PM10S_str)
                 logging.info('Software WR2-Advanced-Updater')
-            """
-            # Check WU Feed Status
-            logging.info('WU Received ' + str(wur.status_code) + ' ' + str(wur.text))
-            # display  green cross for success or a red arrow for fail
-            if (wur.status_code == 200):
-                if (Config.SH_ENABLE == True):
-                    sh_plus()
-                # increase good upload count
-                goodct += 1
-                logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
-            else:
-                if (Config.SH_ENABLE == True):
-                    sh_arrow()
-                # increase fail upload count 
-                failct += 1
-                logging.info('Good Upload Count: {}'.format(goodct) + ' Failed Upload Count: {}'.format(failct))
-            """
         sys.stdout.flush()
