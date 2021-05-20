@@ -181,8 +181,8 @@ if (Config.MQTT_ENABLE == True):
     IN_topic = "PWS/SDL_Indoor"
     OUT_topic = "PWS/weather-rack-2"
     client_id = f'python-mqtt-{random.randint(0,1000)}'
-    username = 'mqtt'
-    password = 'mqtt-8402'
+ #   username = 'mqtt'
+ #   password = 'mqttpass'
     
 # Initialize the date and time 
 date_str = "&dateutc=now"  #Default date stamp for weather services
@@ -321,7 +321,7 @@ def connect_mqtt():
             print("Failed to connect, return code %d\n", rc)
     # Set Connecting Client ID
     client = mqtt_client.Client(client_id)
-    client.username_pw_set(username, password)
+#    client.username_pw_set(username, password)
     client.on_connect = on_connect
     client.connect(broker, port)
     return client
@@ -337,8 +337,6 @@ def publish(client,msg):
     else:
         print(f"Failed to send message to topic {topic}")
     msg_count += 1
-
-
 
 def sh_plus():
     sense.set_pixels(plus)
