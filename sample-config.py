@@ -23,7 +23,12 @@ class Config:
   AQ_STATION_NAME = ""
   LOCATION = {'latitude': 0000000, 'longitude': 0000000}
   TOKEN    = ""
- 
+  
+  # MQTT
+  MQTT_ENABLE = True
+  MQTT_BROKER = "192.168.1.3"
+  MQTT_TOPIC = "PWS/raw-wx-readings"  
+
   # Sense Hat
   SH_ENABLE = False
   
@@ -32,6 +37,3 @@ class Config:
   
   # BMP280
   BMP280_ENABLE = True
-
-  # BMP180  - Depreciated
-  BMP180_ENABLE = False
