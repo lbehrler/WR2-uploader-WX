@@ -180,6 +180,7 @@ if (Config.MQTT_ENABLE == True):
     AQ_topic = "PWS/SDL_AQI"
     IN_topic = "PWS/SDL_Indoor"
     OUT_topic = "PWS/raw-wr2-wx"
+    TB_topic = "PWS/SDL_TB"
     client_id = f'python-mqtt-{random.randint(0,1000)}'
  #   username = 'mqtt'
  #   password = 'mqttpass'
@@ -378,6 +379,20 @@ while True:
         sLine = line.decode()
         #print(sLine)
         #   See if the data is something we need to act on...
+        if (sLine.find('TB') != -1):
+            logging.info('WeatherSense TB found')
+            logging.info('raw data: ' + sLine)
+            # Variable Processing from JSON output from AQI unit for upload
+            logging.info('Variable processing of TB raw data.')
+            raw_data = json.loads(sLine)
+            if (Config.MQTT_ENABLE == True):
+                topic = TB_topic
+                client = connect_mqtt()
+                publish(client, sLine)
+            #Convert local time in UTC
+            time_str=timeUTC(raw_data['time'])
+            # Format process weather variables into strings for  upload
+
         if (sLine.find('AQI') != -1):
             logging.info('WeatherSense AQI found')
             logging.info('raw data: ' + sLine) 
