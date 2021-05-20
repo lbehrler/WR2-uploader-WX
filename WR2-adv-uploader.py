@@ -12,18 +12,18 @@ from threading  import Thread
 import json
 import datetime as dt
 from datetime import datetime
-#import pytz
+import time
 from pytz import timezone
-#import time
+import random
 import logging
-#import traceback
+import traceback
 import math
 import urllib
 import urllib.request
 from sense_hat import SenseHat
 import board
 import adafruit_bmp280
-
+from paho.mqtt import client as mqtt_client
 from config import Config
 
 # Python version work around 
@@ -31,6 +31,8 @@ try:
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urlencode
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Intialize BMP280
 
 if (Config.BMP280_ENABLE == True):
     i2c = board.I2C()
@@ -166,7 +168,22 @@ if (Config.WDY_ENABLE == True):
     WDYurl = "https://stations.windy.com/pws/update/"
     WDYcreds = Config.WDY_STATION_KEY
 
-
+#  Read Windy.com Configuration from config file
+if (Config.MQTT_ENABLE == True):
+    logging.info('Initializing MQTT configuration')
+    if (Config.MQTT_BROKER == "") or (Config.MQTT_TOPIC == ""):
+        logging.error('Missing values from the MQTT configuration')
+        sys.exit(1)
+    broker = Config.MQTT_BROKER
+    port = 1883
+    topic = Config.MQTT_TOPIC
+    AQ_topic = "PWS/SDL_AQI"
+    IN_topic = "PWS/SDL_Indoor"
+    OUT_topic = "PWS/raw-wr2-wx"
+    client_id = f'python-mqtt-{random.randint(0,1000)}'
+ #   username = 'mqtt'
+ #   password = 'mqttpass'
+    
 # Initialize the date and time 
 date_str = "&dateutc=now"  #Default date stamp for weather services
 
@@ -296,6 +313,31 @@ def get_dew_point_c(t_air_c, rel_humidity):
     alpha = ((A * t_air_c) / (B + t_air_c)) + math.log(rel_humidity/100.0)
     return (B * alpha) / (A - alpha)
 
+def connect_mqtt():
+    def on_connect(client, userdata, flags, rc):
+        if rc == 0:
+            print("Connected to MQTT Broker!")
+        else:
+            print("Failed to connect, return code %d\n", rc)
+    # Set Connecting Client ID
+    client = mqtt_client.Client(client_id)
+#    client.username_pw_set(username, password)
+    client.on_connect = on_connect
+    client.connect(broker, port)
+    return client
+
+def publish(client,msg):
+    msg_count = 0
+    # msg = f"messages: {msg_count}"
+    result = client.publish(topic, msg)
+    # result: [0, 1]
+    status = result[0]
+    if status == 0:
+        print(f"Send `{msg}` to topic `{topic}`")
+    else:
+        print(f"Failed to send message to topic {topic}")
+    msg_count += 1
+
 def sh_plus():
     sense.set_pixels(plus)
     time.sleep(1)
@@ -305,6 +347,7 @@ def sh_arrow():
     sense.set_pixels(arrow_up)
     time.sleep(1)
     sense.clear()
+
 
 #   Create our sub-process...
 #   Note that we need to either ignore output from STDERR or merge it with STDOUT due to a limitation/bug somewhere under the covers of "subprocess"
@@ -341,6 +384,10 @@ while True:
             # Variable Processing from JSON output from AQI unit for upload
             logging.info('Variable processing of AQI raw data.')
             raw_data = json.loads(sLine)
+            if (Config.MQTT_ENABLE == True):
+                topic = AQ_topic
+                client = connect_mqtt()
+                publish(client, sLine) 
             #Convert local time in UTC
             time_str=timeUTC(raw_data['time'])
             # Format process weather variables into strings for  upload
@@ -380,6 +427,10 @@ while True:
             indtemp_str =  "{0:.1f}".format(raw_data['temperature_F'])
             logging.info('Indoor Temp: ' + indtemp_str)
             logging.info('Indoor Humidity: ' + indhumidity_str)
+            if (Config.MQTT_ENABLE == True):
+                topic = IN_topic
+                client = connect_mqtt()
+                publish(client, sLine) 
             if (Config.SH_ENABLE == True):
                 # Send the local data to the Sense HAT
                 shMsg= indtemp_str + "F " + " " + indhumidity_str + "%"
@@ -399,7 +450,10 @@ while True:
                 logging.info('Barometer hPa ' + str(bmp280.pressure))
                 baro_str = "{0:.2f}".format (bmp280.pressure * 0.0295300)
                 barohpa_str = "{0:.2f}".format (bmp280.pressure) 
-
+            if (Config.MQTT_ENABLE == True):
+                topic = OUT_topic
+                client = connect_mqtt()
+                publish(client, sLine) 
             # Variable Processing from JSON output from WR2 unit for upload
             logging.info('Variable processing of WR2 raw data.')
             raw_data = json.loads(sLine)
