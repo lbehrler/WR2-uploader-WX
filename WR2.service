@@ -1,0 +1,18 @@
+#! /bin/bash
+
+[Unit]
+Description=WR2 Advanced Uploader
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python /home/pi/WR2-uploader-WX/WR2-adv-uploader.py
+RemainAfterExit=yes
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=my_server
+User=pi
+Group=pi
+
+[Install]
+

@@ -523,7 +523,7 @@ while True:
                 sense.show_message(shMsg, text_colour=[255, 255, 0], back_colour=[0, 0, 102])
                 # clear the screen
                 sense.clear()
-                
+
             #build weather packet for sending to WU and PWS
             weather_data = {
                 'dateutc': time_str,
@@ -541,13 +541,13 @@ while True:
                 'AqPM10': PM10S_str, # comment out if no AQI
                 'softwaretype':str("WR2-Advanced-Updater"),
                     }
-            
+
             weather_data_wdy = {
                 #'station': Config.WDY_STATION_ID,
                 'dateutc': time_str,
                 #'dateutc':"now",
                 'tempf': temp_str,
-                'windspeedmph': avewind_str,                
+                'windspeedmph': avewind_str,
                 'winddir': winddir_str,
                 'windgustmph': gustwind_str,
                 'humidity': humidity_str,
@@ -556,7 +556,7 @@ while True:
                 'rainin': dayrain_str,
                 'uv': uv_str,
                     }
-            
+
             # Form URL into WU format and Send
             if (Config.WU_ENABLE == True):
                 # From http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
@@ -576,7 +576,7 @@ while True:
                     #traceback.print_exc(file=sys.stdout)
             else:
                 logging.info('Skipping Weather Underground upload')
-                
+
             # Check upload time against interval to insure weather data is sent to PWSweather.com once every 1-30 minutes
             # get the current minute
             current_minute = dt.datetime.now().minute
@@ -587,7 +587,7 @@ while True:
                 # reset last_minute to the current_minute
                 last_minute = current_minute
                 # is minute zero, or divisible by 10?
-                
+
                 # PWS weather upload
                 # we're only going to use measurements every PWS_INTERVAL minutes
                 if (Config.PWS_ENABLE == True and ((current_minute == 0) or ((current_minute % Config.PWS_INTERVAL) == 0))):
@@ -611,7 +611,7 @@ while True:
                         #traceback.print_exc(file=sys.stdout)
                 else:
                     logging.info('Skipping PWSweather.com upload')
-                    
+
                 # WDY weather upload
                 # we're only going to use measurements every WDY_INTERVAL minutes
                 if (Config.WDY_ENABLE == True and ((current_minute == 0) or ((current_minute % Config.WDY_INTERVAL) == 0))):
