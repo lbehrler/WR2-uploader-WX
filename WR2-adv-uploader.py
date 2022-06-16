@@ -181,8 +181,8 @@ if (Config.MQTT_ENABLE == True):
     OUT_topic = "PWS/raw-wr2-wx"
     TB_topic = "PWS/SDL_TB"
     client_id = f'python-mqtt-{random.randint(0,1000)}'
- #   username = 'mqtt'
- #   password = 'mqttpass'
+    username = 'mqtt'
+    password = 'mqtt-8402'
 
 # Initialize the date and time
 date_str = "&dateutc=now"  #Default date stamp for weather services
@@ -314,6 +314,7 @@ def get_dew_point_c(t_air_c, rel_humidity):
     return (B * alpha) / (A - alpha)
 
 def connect_mqtt():
+    print ("MQTT connect attempt ---------------------------------------")
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             print("Connected to MQTT Broker!")
@@ -321,7 +322,7 @@ def connect_mqtt():
             print("Failed to connect, return code %d\n", rc)
     # Set Connecting Client ID
     client = mqtt_client.Client(client_id)
-#    client.username_pw_set(username, password)
+    client.username_pw_set(username, password)
     client.on_connect = on_connect
     client.connect(broker, port)
     return client
@@ -465,6 +466,7 @@ while True:
                 baro_str = "{0:.2f}".format (bmp280.pressure * 0.0295300)
                 barohpa_str = "{0:.2f}".format (bmp280.pressure) 
             if (Config.MQTT_ENABLE == True):
+                logging.info('------------------MQTTTTTTTTTTTTTTTTTTTTTTTTTTTT')
                 topic = OUT_topic
                 client = connect_mqtt()
                 publish(client, sLine) 
