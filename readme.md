@@ -96,5 +96,6 @@ sudo python ./SH-WR2-uploader-WU.py
 
 ## Revision History
 
-+ 01/06/2021 - initial release
++ 01/06/2020 - initial release
++ 05/20/2021 - Added MQTT support 
 
