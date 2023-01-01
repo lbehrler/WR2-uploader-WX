@@ -110,7 +110,7 @@ if (Config.WU_ENABLE == True):
     logging.debug('Station key: {}'.format(wu_station_key))
     # Weather Underground URL formation 
     # Create a string to hold the first part of the URL
-    
+
     # Standard upload
     #WUurl = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?"
     #WUaction_str = "&action=updateraw"
@@ -149,11 +149,11 @@ if (Config.AQ_ENABLE == True):
     logging.debug('AQ Station key: {}'.format(Config.AQ_STATION_NAME))
     AQstation = {'id':Config.AQ_STATION_ID, 'name':Config.AQ_STATION_NAME, 'location':Config.LOCATION} 
     AQurl = "https://aqicn.org/sensor/upload/"
-    
+
     #Global AQ variables for WU as WU updates every 16 seconds AQ every 18 minutes
     PM25S_str = ""
     PM10S_str = ""
-    
+
 #  Read Windy.com Configuration from config file
 if (Config.WDY_ENABLE == True):
     logging.info('Initializing Windy.com configuration')
@@ -259,7 +259,7 @@ logging.info('Initialization complete!')
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Starting up wireless read from SDR 
+# Starting up wireless read from SDR
 
 # 146 = FT-020T WeatherRack2, #147 = F016TH SDL Temperature/Humidity Sensor
 logging.info('Starting Wireless Read')
@@ -267,7 +267,7 @@ logging.info('Starting Wireless Read')
 cmd = [ '/usr/local/bin/rtl_433', '-q', '-F', 'json', '-R', '146', '-R', '147', '-R', '150', '-R', '151']
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-#   Functions 
+#   Functions
 
 def nowStr():
     return( datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S'))
@@ -395,14 +395,14 @@ while True:
 
         if (sLine.find('AQI') != -1):
             logging.info('WeatherSense AQI found')
-            logging.info('raw data: ' + sLine) 
+            logging.info('raw data: ' + sLine)
             # Variable Processing from JSON output from AQI unit for upload
             logging.info('Variable processing of AQI raw data.')
             raw_data = json.loads(sLine)
             if (Config.MQTT_ENABLE == True):
                 topic = AQ_topic
                 client = connect_mqtt()
-                publish(client, sLine) 
+                publish(client, sLine)
             #Convert local time in UTC
             time_str=timeUTC(raw_data['time'])
             # Format process weather variables into strings for  upload
@@ -425,10 +425,10 @@ while True:
                 request = requests.post (AQurl, json = aq_data)
                 print(request.text)
                 data = request.json()
-                if data["status"]!="ok": 
-                    print("Something went wrong: %s" % data) 
-                else: 
-                    print("Data successfully posted: %s" % data) 
+                if data["status"]!="ok":
+                    print("Something went wrong: %s" % data)
+                else:
+                    print("Data successfully posted: %s" % data)
             else:
                 logging.info('Elsing Skipping AQI upload')
 
@@ -445,7 +445,7 @@ while True:
             if (Config.MQTT_ENABLE == True):
                 topic = IN_topic
                 client = connect_mqtt()
-                publish(client, sLine) 
+                publish(client, sLine)
             if (Config.SH_ENABLE == True):
                 # Send the local data to the Sense HAT
                 shMsg= indtemp_str + "F " + " " + indhumidity_str + "%"
@@ -464,12 +464,12 @@ while True:
                 logging.info('Variable processing of BMP280 raw data.')
                 logging.info('Barometer hPa ' + str(bmp280.pressure))
                 baro_str = "{0:.2f}".format (bmp280.pressure * 0.0295300)
-                barohpa_str = "{0:.2f}".format (bmp280.pressure) 
+                barohpa_str = "{0:.2f}".format (bmp280.pressure)
             if (Config.MQTT_ENABLE == True):
                 logging.info('------------------MQTTTTTTTTTTTTTTTTTTTTTTTTTTTT')
                 topic = OUT_topic
                 client = connect_mqtt()
-                publish(client, sLine) 
+                publish(client, sLine)
             # Variable Processing from JSON output from WR2 unit for upload
             logging.info('Variable processing of WR2 raw data.')
             raw_data = json.loads(sLine)
